@@ -333,6 +333,42 @@ app.post('/api/projects', async (req, res) => {
   }
 });
 
+// DELETE /api/projects/:id
+app.delete('/api/projects/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    let projects = await readData(PROJECTS_FILE);
+    const projToDelete = projects.find((p) => p.id === id);
+
+    if (!projToDelete) {
+      return res.status(404).json({ success: false, message: 'Project not found' });
+    }
+
+    projects = projects.filter((p) => p.id !== id);
+    await writeData(PROJECTS_FILE, projects);
+
+    // Release allocated employees back to bench
+    let employees = await readData(EMPLOYEES_FILE);
+    employees = employees.map((emp) => {
+      if (emp.assignedProjectId === id) {
+        return {
+          ...emp,
+          assignedProjectId: null,
+          assignedProjectName: 'Unassigned (Available for new project)',
+          allocationPercent: 0,
+          allocationStatus: 'Available (Bench)',
+        };
+      }
+      return emp;
+    });
+    await writeData(EMPLOYEES_FILE, employees);
+
+    res.json({ success: true, message: 'Project deleted and resources released', data: projToDelete });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to delete project' });
+  }
+});
+
 // ==========================================
 // 4. LEAVE MANAGEMENT & ATTENDANCE
 // ==========================================

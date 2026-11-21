@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { Briefcase, Plus, Users, Calendar, DollarSign, X, CheckCircle2, UserPlus, Check } from 'lucide-react';
+import { Briefcase, Plus, Users, Calendar, DollarSign, X, CheckCircle2, UserPlus, Check, Trash2 } from 'lucide-react';
 
 export default function ProjectManager({
   projects = [],
   employees = [],
   onDataChanged,
   onCreateProject,
+  onDeleteProject,
   onAllocate,
   onDeallocate,
 }) {
@@ -13,6 +14,14 @@ export default function ProjectManager({
   const [quickStaffingProjectId, setQuickStaffingProjectId] = useState(null);
   const [selectedStaffEmployeeId, setSelectedStaffEmployeeId] = useState('');
   const [selectedStaffPercent, setSelectedStaffPercent] = useState('100');
+
+  const handleDeleteClick = (projId, projName) => {
+    if (window.confirm(`Permanently remove project "${projName}" (${projId})?\n\nAny allocated team members will be automatically released back to the Bench.`)) {
+      if (onDeleteProject) {
+        onDeleteProject(projId);
+      }
+    }
+  };
 
   const [newProj, setNewProj] = useState({
     name: '',
@@ -146,6 +155,15 @@ export default function ProjectManager({
                     >
                       {proj.priority} Priority
                     </span>
+                    {onDeleteProject && (
+                      <button
+                        onClick={() => handleDeleteClick(proj.id, proj.name)}
+                        className="p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition"
+                        title={`Delete project ${proj.name} & release squad`}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
                   </div>
                 </div>
 

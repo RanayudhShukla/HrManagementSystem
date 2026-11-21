@@ -565,6 +565,54 @@ export default function App() {
     } catch {}
   };
 
+  // 5b. DELETE PROJECT HANDLER (With Auto-Release of Squad & Firestore Sync)
+  const handleDeleteProject = async (projectId) => {
+    const projToDelete = projects.find((p) => p.id === projectId);
+    const updatedProjects = projects.filter((p) => p.id !== projectId);
+    
+    // Automatically release any employees assigned to this project back to bench
+    let affectedEmployeeIds = [];
+    const updatedEmployees = employees.map((emp) => {
+      if (emp.assignedProjectId === projectId) {
+        affectedEmployeeIds.push(emp.id);
+        return {
+          ...emp,
+          assignedProjectId: null,
+          assignedProjectName: 'Unassigned (Available for new project)',
+          allocationPercent: 0,
+          allocationStatus: 'Available (Bench)',
+        };
+      }
+      return emp;
+    });
+
+    setProjects(updatedProjects);
+    setEmployees(updatedEmployees);
+    localStorage.setItem('pulsehr_projects', JSON.stringify(updatedProjects));
+    localStorage.setItem('pulsehr_employees', JSON.stringify(updatedEmployees));
+    broadcastSync({ projects: updatedProjects, employees: updatedEmployees });
+
+    showToast(`Project "${projToDelete?.name || projectId}" removed successfully.`);
+
+    addNotification({
+      title: 'Project Removed',
+      message: `Project "${projToDelete?.name || projectId}" was deleted. Allocated resources returned to bench.`,
+      type: 'system',
+      targetRole: 'hr',
+    });
+
+    // Cloud Firestore Sync
+    deleteProjectFromFirestore(projectId);
+    for (const empId of affectedEmployeeIds) {
+      const updatedEmp = updatedEmployees.find((e) => e.id === empId);
+      if (updatedEmp) syncEmployeeToFirestore(updatedEmp);
+    }
+
+    try {
+      await fetch(`/api/projects/${projectId}`, { method: 'DELETE' });
+    } catch {}
+  };
+
   // 6. UPDATE LEAVE STATUS HANDLER (Approve/Reject + Notify Employee)
   const handleUpdateLeaveStatus = async (leaveId, status) => {
     const targetLeave = leaves.find((l) => l.id === leaveId);
@@ -1035,6 +1083,7 @@ export default function App() {
                   projects={projects}
                   employees={employees}
                   onCreateProject={handleCreateProject}
+                  onDeleteProject={handleDeleteProject}
                   onAllocate={handleAllocateEmployee}
                   onDeallocate={handleDeallocateEmployee}
                 />
