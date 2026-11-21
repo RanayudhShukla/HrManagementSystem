@@ -283,19 +283,19 @@ export default function EmployeePortal({
       <div className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200/80 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="flex items-center gap-4">
           <div className="w-16 h-16 rounded-2xl bg-[#452473] text-white font-black text-2xl flex items-center justify-center shadow-lg shadow-purple-950/20">
-            {employee.name.split(' ').map((n) => n[0]).join('')}
+            {(employee?.name || 'Employee').split(' ').map((n) => n[0]).join('')}
           </div>
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <span className="px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-900 text-[10px] font-mono font-bold tracking-wide">
                 CO-OPERATE HRMS • ESS
               </span>
-              <span className="text-xs text-slate-400 font-mono font-bold">{employee.id}</span>
+              <span className="text-xs text-slate-400 font-mono font-bold">{employee?.id || ''}</span>
               <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-semibold flex items-center gap-1">
-                <MapPin className="w-3 h-3" /> {employee.workMode}
+                <MapPin className="w-3 h-3" /> {employee?.workMode || 'Office'}
               </span>
             </div>
-            <h1 className="text-2xl font-black text-slate-900 mt-1">{employee.name}</h1>
+            <h1 className="text-2xl font-black text-slate-900 mt-1">{employee?.name || 'Employee'}</h1>
             <p className="text-xs text-slate-500 flex items-center gap-2 mt-0.5">
               <span>{employee.role}</span>
               <span>•</span>

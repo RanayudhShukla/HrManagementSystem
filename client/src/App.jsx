@@ -789,6 +789,16 @@ export default function App() {
     ? (employees.find((e) => e.id === activeEmpId) || selectedEmployee || currentUser?.employee)
     : (selectedEmployee || currentUser?.employee);
 
+  // If user is logged in as an employee, but their employee record was purged or not found,
+  // gracefully clear the stale session and redirect to LoginPage rather than crashing!
+  if (!isHR && (!liveEmployee || !liveEmployee.id)) {
+    try {
+      sessionStorage.removeItem('pulsehr_auth');
+      localStorage.removeItem('pulsehr_auth');
+    } catch {}
+    return <LoginPage onLogin={handleLogin} employees={employees} />;
+  }
+
   return (
     <div className="flex min-h-screen bg-[#f4f5fa] text-slate-800 font-sans selection:bg-[#ff5c8a] selection:text-white">
       {/* Toast Alert */}

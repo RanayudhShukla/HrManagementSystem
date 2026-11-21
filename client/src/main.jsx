@@ -18,7 +18,10 @@ class ErrorBoundary extends React.Component {
   }
 
   handleReset = () => {
-    localStorage.removeItem('pulsehr_auth');
+    try {
+      sessionStorage.clear();
+      localStorage.removeItem('pulsehr_auth');
+    } catch {}
     window.location.reload();
   };
 
