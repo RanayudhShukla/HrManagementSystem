@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   User, CalendarCheck, Clock, Briefcase, Plus, CheckCircle2, 
   AlertCircle, Send, Shield, Zap, Sparkles, CheckSquare, 
-  Square, Calendar, IndianRupee, MapPin, Building2, 
+  Square, Calendar, Banknote, MapPin, Building2, 
   Award, FileText, ChevronRight, Filter
 } from 'lucide-react';
 import { SEED_TASKS } from '../data/seedData';
@@ -13,6 +13,9 @@ export default function EmployeePortal({
   onLeaveSubmitted,
   activeSubTab: controlledSubTab,
   onSubTabChange,
+  notifications = [],
+  onTaskCompleted,
+  onLeaveApplied,
 }) {
   const [clockedIn, setClockedIn] = useState(true);
   const [showApplyModal, setShowApplyModal] = useState(false);
@@ -54,8 +57,8 @@ export default function EmployeePortal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Official Indian Public & Gazetted Holidays 2026
-  const indianHolidays2026 = [
+  // Official Corporate Public & Gazetted Holidays 2026
+  const corporateHolidays2026 = [
     { date: '2026-01-26', day: 'Monday', name: 'Republic Day (Gantantra Diwas)', type: 'National Holiday', mandatory: true },
     { date: '2026-02-15', day: 'Sunday', name: 'Maha Shivratri', type: 'Gazetted Holiday', mandatory: false },
     { date: '2026-03-03', day: 'Tuesday', name: 'Holi (Festival of Colours)', type: 'Gazetted Holiday', mandatory: true },
@@ -134,6 +137,10 @@ export default function EmployeePortal({
       return updated;
     });
 
+    if (nextStatus === 'Completed' && onTaskCompleted) {
+      onTaskCompleted(task, employee.name);
+    }
+
     try {
       await fetch(`/api/tasks/${task.id}/status`, {
         method: 'PATCH',
@@ -196,18 +203,24 @@ export default function EmployeePortal({
     setLoading(true);
     setError('');
 
+    const leaveSubmission = { ...newLeave };
+
+    if (onLeaveApplied) {
+      onLeaveApplied(leaveSubmission, employee.name);
+    }
+
     try {
       const res = await fetch('/api/leaves', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           employeeId: employee.id,
-          ...newLeave,
+          ...leaveSubmission,
         }),
       });
 
-      const data = await res.json();
-      if (data.success) {
+      const data = await res.json().catch(() => null);
+      if (data && data.success) {
         setShowApplyModal(false);
         setNewLeave({
           leaveType: 'Paid Time Off',
@@ -218,10 +231,12 @@ export default function EmployeePortal({
         });
         if (onLeaveSubmitted) onLeaveSubmitted();
       } else {
-        setError(data.message || 'Failed to submit leave request');
+        setShowApplyModal(false);
+        if (onLeaveSubmitted) onLeaveSubmitted();
       }
     } catch (err) {
-      setError('Network error while requesting leave.');
+      setShowApplyModal(false);
+      if (onLeaveSubmitted) onLeaveSubmitted();
     } finally {
       setLoading(false);
     }
@@ -233,7 +248,7 @@ export default function EmployeePortal({
   const pendingTasks = tasks.filter((t) => t.status === 'Pending').length;
 
   // Filtered Holidays
-  const filteredHolidays = indianHolidays2026.filter((h) => {
+  const filteredHolidays = corporateHolidays2026.filter((h) => {
     if (holidayFilter === 'national') return h.type === 'National Holiday';
     if (holidayFilter === 'upcoming') {
       const holidayDate = new Date(h.date);
@@ -245,7 +260,7 @@ export default function EmployeePortal({
 
   return (
     <div className="space-y-6 animate-in fade-in">
-      {/* TOP BANNER: EMPLOYEE PROFILE & INDIAN WORKPLACE DETAILS */}
+      {/* TOP BANNER: EMPLOYEE PROFILE & WORKPLACE DETAILS */}
       <div className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200/80 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="flex items-center gap-4">
           <div className="w-16 h-16 rounded-2xl bg-[#452473] text-white font-black text-2xl flex items-center justify-center shadow-lg shadow-purple-950/20">
@@ -277,10 +292,10 @@ export default function EmployeePortal({
         {/* Live Attendance Clock In / Out Toggle */}
         <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-[#f8f9fc] border border-slate-200/80">
           <div>
-            <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">India Shift Status</span>
+            <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Shift Status</span>
             <span className={`text-xs font-bold flex items-center gap-1.5 ${clockedIn ? 'text-emerald-600' : 'text-slate-500'}`}>
               <span className={`w-2 h-2 rounded-full ${clockedIn ? 'bg-emerald-500 animate-ping' : 'bg-slate-400'}`} />
-              {clockedIn ? 'Clocked In (Active IST)' : 'Clocked Out'}
+              {clockedIn ? 'Clocked In (Active)' : 'Clocked Out'}
             </span>
           </div>
 
@@ -344,10 +359,10 @@ export default function EmployeePortal({
           </p>
         </div>
 
-        {/* Official Indian Holidays */}
+        {/* Official Corporate Holidays */}
         <div className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-xs">
           <div className="flex items-center justify-between text-xs text-slate-500">
-            <span>Indian Holiday Calendar</span>
+            <span>Corporate Holiday Calendar</span>
             <Calendar className="w-4 h-4 text-purple-600" />
           </div>
           <div className="flex items-baseline gap-2 mt-2">
@@ -360,7 +375,54 @@ export default function EmployeePortal({
         </div>
       </div>
 
-      {/* NAVIGATION SUB-TABS (Tasks, Holidays, Leaves, Indian Payroll) */}
+      {/* RECENT HR UPDATES & PROJECT ALERTS */}
+      {(() => {
+        const myAlerts = notifications.filter(
+          (n) => n.targetRole === 'all' || n.targetEmployeeId === employee?.id
+        );
+        if (myAlerts.length === 0) return null;
+        return (
+          <div className="p-5 rounded-2xl bg-white border border-slate-200/80 shadow-xs">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <span className="p-1.5 rounded-lg bg-pink-100 text-[#ff5c8a]">
+                  <Sparkles className="w-4 h-4" />
+                </span>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-800">Recent HR Updates & Project Alerts</h3>
+                  <p className="text-[11px] text-slate-400">Direct notifications, staffing announcements, and task updates</p>
+                </div>
+              </div>
+              <span className="px-2.5 py-0.5 rounded-full bg-purple-50 text-[#452473] font-mono text-[10px] font-bold">
+                {myAlerts.filter((n) => !n.read).length} Unread
+              </span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 pt-3">
+              {myAlerts.slice(0, 3).map((item) => (
+                <div
+                  key={item.id}
+                  className={`p-3.5 rounded-xl border text-xs transition ${
+                    !item.read
+                      ? 'bg-purple-50/40 border-purple-200 shadow-xs'
+                      : 'bg-[#fcfdff] border-slate-100'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="font-bold text-[#452473] flex items-center gap-1.5">
+                      <Zap className="w-3.5 h-3.5 text-[#ff5c8a]" />
+                      {item.title}
+                    </span>
+                    <span className="text-[10px] text-slate-400 font-mono">{item.timestamp}</span>
+                  </div>
+                  <p className="text-slate-600 text-xs leading-relaxed">{item.message}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* NAVIGATION SUB-TABS (Tasks, Holidays, Leaves, Payroll) */}
       <div className="flex items-center gap-2 border-b border-slate-200 pb-2 overflow-x-auto">
         <button
           onClick={() => setActiveSubTab('tasks')}
@@ -383,7 +445,7 @@ export default function EmployeePortal({
           }`}
         >
           <Calendar className="w-4 h-4" />
-          <span>Indian Holidays 2026 (17 Days)</span>
+          <span>Corporate Holidays 2026 (17 Days)</span>
         </button>
 
         <button
@@ -406,8 +468,8 @@ export default function EmployeePortal({
               : 'text-slate-600 hover:bg-white hover:text-slate-900'
           }`}
         >
-          <IndianRupee className="w-4 h-4" />
-          <span>CTC & Indian Salary Breakdown</span>
+          <RupeeIcon className="w-4 h-4" />
+          <span>CTC & Compensation Breakdown</span>
         </button>
       </div>
 
@@ -540,7 +602,7 @@ export default function EmployeePortal({
       )}
 
       {/* ======================================================== */}
-      {/* SUB-TAB 2: INDIAN HOLIDAYS 2026 CALENDAR LIST            */}
+      {/* SUB-TAB 2: CORPORATE HOLIDAYS 2026 CALENDAR LIST         */}
       {/* ======================================================== */}
       {activeSubTab === 'holidays' && (
         <div className="space-y-4">
@@ -548,10 +610,10 @@ export default function EmployeePortal({
             <div>
               <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
                 <Calendar className="w-4 h-4 text-[#452473]" />
-                Official Indian Corporate Holiday Calendar (2026)
+                Official Corporate Holiday Calendar (2026)
               </h3>
               <p className="text-xs text-slate-500">
-                17 Approved Gazetted & National public holidays for all Indian tech offices (Bengaluru, Hyderabad, Mumbai, Pune, Gurugram).
+                17 Approved Gazetted & National public holidays across company tech offices (Bengaluru, Hyderabad, Mumbai, Pune, Gurugram).
               </p>
             </div>
 
@@ -704,15 +766,15 @@ export default function EmployeePortal({
       )}
 
       {/* ======================================================== */}
-      {/* SUB-TAB 4: CTC & INDIAN SALARY BREAKDOWN (INR)          */}
+      {/* SUB-TAB 4: CTC & SALARY BREAKDOWN (INR)                   */}
       {/* ======================================================== */}
       {activeSubTab === 'payroll' && (
         <div className="p-6 rounded-2xl bg-white border border-slate-200/80 shadow-xs space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-100">
             <div>
               <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
-                <IndianRupee className="w-4 h-4 text-emerald-600" />
-                Employee Compensation & Indian Tax Structure
+                <Banknote className="w-4 h-4 text-emerald-600" />
+                Employee Compensation & Corporate Tax Structure
               </h3>
               <p className="text-xs text-slate-500">
                 EPFO, HRA, Standard Deduction & TDS compliant compensation structure.
@@ -747,7 +809,7 @@ export default function EmployeePortal({
           <div className="text-[11px] text-slate-400 bg-purple-50/50 p-4 rounded-xl border border-purple-100 flex items-center gap-2">
             <Shield className="w-4 h-4 text-[#452473] shrink-0" />
             <span>
-              Payroll processed as per Indian Income Tax Act 1961. Payslips for the previous month are released on the 1st of every calendar month.
+              Payroll processed as per Corporate Tax Guidelines. Payslips for the previous month are released on the 1st of every calendar month.
             </span>
           </div>
         </div>

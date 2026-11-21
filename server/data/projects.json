@@ -2,7 +2,7 @@
   {
     "id": "PROJ-201",
     "name": "BharatPay UPI & Banking Gateway",
-    "client": "BharatPay India Financial Technologies",
+    "client": "BharatPay Financial Technologies",
     "status": "In Progress",
     "lead": "David Chen",
     "startDate": "2024-05-01",
@@ -43,8 +43,8 @@
   },
   {
     "id": "PROJ-203",
-    "name": "Q4 India Tech Hiring Ramp",
-    "client": "Internal HR Operations (India)",
+    "name": "Q4 Global Tech Hiring Ramp",
+    "client": "Internal HR Operations",
     "status": "In Progress",
     "lead": "Kavita Verma",
     "startDate": "2024-09-01",

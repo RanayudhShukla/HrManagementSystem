@@ -8,7 +8,7 @@
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 > **Enterprise HR Resource Management System (HRMS) & Workforce Allocation Suite**  
-> Designed for modern IT consultancies, software engineering firms, and digital enterprises. Features a complete Role-Based Access Control (RBAC) architecture separating **Executive HR Administration** from **Employee Self-Service (ESS)** with native Indian localization (INR ₹ currency, EPFO/HRA compliance, and the 2026 Official Gazetted Indian Holidays Calendar).
+> Designed for modern IT consultancies, software engineering firms, and digital enterprises. Features a complete Role-Based Access Control (RBAC) architecture separating **Executive HR Administration** from **Employee Self-Service (ESS)** with native enterprise localization (₹ currency, corporate compliance, and the 2026 Official Gazetted Corporate Holidays Calendar).
 
 ---
 
@@ -18,10 +18,10 @@
 * 📊 **Executive HR Intelligence Suite:** Live KPI telemetry, monthly workforce trajectory wave visualizer, bench capacity utilization %, and department distributions.
 * ⚡ **Resource Capacity & Bench Allocation Engine:** Real-time staffing matrix tracking *Fully Booked (100%)*, *Partially Available (50%)*, and *Available on Bench (0%)* talent across client projects.
 * 📋 **Employee Sprint Deliverables ("Kya Kaam Mila Hai"):** Dedicated employee task board with real-time status toggling (*In Progress* ⇄ *Completed*), priority tags, deadlines, and effort estimations.
-* 🇮🇳 **Indian Corporate Localization:**
-  * All compensation and budgets tracked in **Indian Rupees (₹ Lakhs & Crores)**.
-  * **2026 Official Gazetted & National Public Holidays** (17 approved days with category filters).
-  * Indian engineering hubs (*Bengaluru HQ, Hyderabad Tech Center, Mumbai, Pune, Gurugram*).
+* 🏛️ **Corporate Compensation & Global Tech Hubs:**
+  * All compensation and budgets tracked in **Rupees (₹ Lakhs & Crores)**.
+  * **2026 Official Corporate & Public Holidays** (17 approved days with category filters).
+  * Global tech engineering hubs (*Bengaluru HQ, Hyderabad Tech Center, Mumbai, Pune, Gurugram*).
   * EPFO (12% matching), HRA, Standard Deduction & Form-16 compliant structure.
 * 🌴 **Leave & Attendance Engine:** Automated leave balance decrementing upon approval, multi-category time-off filing (*Paid Annual, Medical, Casual, Optional*), and live IST shift clock in/out.
 * 🚀 **Multi-Cloud Deployment Ready:** Pre-configured for seamless 1-click deployment on **Vercel**, **Render**, and **Firebase Hosting**.
@@ -35,7 +35,7 @@ The platform utilizes direct email/password verification against the company dir
 | Role | Work Email | Password | Access & Permissions |
 | :--- | :--- | :--- | :--- |
 | **HR Administrator** | `admin@cooperatehrms.com` | `admin123` | Full administrative control: Workforce directory, bench allocation, project staffing, leave approval/rejection, and analytics. |
-| **Lead Frontend Dev** | `aarav.sharma@cooperate.com` | `any password` | ESS Portal: Assigned sprint deliverables (UPI Gateway), leave balances, Indian holiday calendar, CTC breakdown. |
+| **Lead Frontend Dev** | `aarav.sharma@cooperate.com` | `any password` | ESS Portal: Assigned sprint deliverables (UPI Gateway), leave balances, corporate holiday calendar, CTC breakdown. |
 | **Principal UI Designer** | `elena.r@cooperate.com` | `any password` | ESS Portal: Vortex Cloud design deliverables, attendance tracking, leave requests history. |
 | **Backend Engineer** | `marcus.v@cooperate.com` | `any password` | ESS Portal: Bench upskilling deliverables, personal attendance, leave application. |
 | **Talent Acquisition Mgr**| `kavita.v@cooperate.com` | `any password` | ESS Portal: Technical hiring deliverables, leave records. |
@@ -56,14 +56,14 @@ The platform utilizes direct email/password verification against the company dir
 ### Workforce & Resource Endpoints
 * `GET /api/employees` — Query workforce directory with `?department=`, `?allocation=`, `?search=`, and `?skill=` filters.
 * `GET /api/employees/:id` — Retrieve detailed employee profile.
-* `POST /api/employees` — Onboard new employee with Indian CTC and base office.
+* `POST /api/employees` — Onboard new employee with standardized CTC and base office.
 * `DELETE /api/employees/:id` — Offboard employee.
 * `POST /api/resources/allocate` — Assign employee to project with 50% or 100% capacity.
 * `POST /api/resources/deallocate` — Release employee back to Bench pool (0% allocation).
 
 ### Projects & Staffing Endpoints
 * `GET /api/projects` — Fetch all client deliverables and staffed engineering squads.
-* `POST /api/projects` — Create project with Indian Rupee budget and skill requirements.
+* `POST /api/projects` — Create project with project budget (₹) and skill requirements.
 
 ### Sprint Tasks & Deliverables Endpoints
 * `GET /api/tasks?employeeId=:id` — Fetch sprint deliverables assigned to an employee.

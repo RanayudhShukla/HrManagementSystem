@@ -1,16 +1,64 @@
-import React from 'react';
-import { Search, Bell, Settings, LogOut, ShieldCheck } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { 
+  Search, Bell, Settings, LogOut, CheckCircle2, 
+  Briefcase, CalendarCheck, AlertCircle, Check, Trash2, X 
+} from 'lucide-react';
 
 export default function Header({
   searchQuery,
   setSearchQuery,
   currentUser,
   onLogout,
+  notifications = [],
+  onMarkRead,
+  onMarkAllRead,
+  onClearAll,
 }) {
   const isHR = currentUser?.role === 'hr';
+  const employeeId = currentUser?.employee?.id;
+
+  const [showNotifMenu, setShowNotifMenu] = useState(false);
+  const dropdownRef = useRef(null);
+
+  // Close dropdown when clicked outside
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowNotifMenu(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Filter notifications relevant to current session role
+  const relevantNotifications = notifications.filter((n) => {
+    if (isHR) {
+      return n.targetRole === 'hr' || n.targetRole === 'all';
+    } else {
+      return n.targetRole === 'all' || n.targetEmployeeId === employeeId;
+    }
+  });
+
+  const unreadCount = relevantNotifications.filter((n) => !n.read).length;
+
+  const getNotifIcon = (type) => {
+    switch (type) {
+      case 'task_completed':
+        return <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />;
+      case 'project_assigned':
+        return <Briefcase className="w-4 h-4 text-[#ff5c8a] shrink-0" />;
+      case 'leave_applied':
+      case 'leave_approved':
+      case 'leave_rejected':
+        return <CalendarCheck className="w-4 h-4 text-amber-500 shrink-0" />;
+      default:
+        return <Bell className="w-4 h-4 text-purple-500 shrink-0" />;
+    }
+  };
 
   return (
-    <header className="h-20 bg-white border-b border-slate-200/80 px-6 sm:px-8 flex items-center justify-between sticky top-0 z-30 shadow-xs">
+    <header className="h-20 bg-white border-b border-slate-200/80 px-6 sm:px-8 flex items-center justify-between sticky top-0 z-40 shadow-xs select-none">
       {/* Search Input Bar */}
       <div className="flex-1 max-w-md">
         <div className="relative">
@@ -40,16 +88,104 @@ export default function Header({
               {name[0]}
             </div>
           ))}
-          <div className="w-7 h-7 rounded-full bg-[#452473] text-white text-[11px] font-bold flex items-center justify-center border-2 border-white shadow-xs cursor-pointer">
+          <div className="w-7 h-7 rounded-full bg-[#452473] text-white text-[11px] font-bold flex items-center justify-center border-2 border-white shadow-xs">
             +
           </div>
         </div>
 
-        {/* Notification Bell */}
-        <button className="relative p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition">
-          <Bell className="w-4 h-4" />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#ff5c8a]" />
-        </button>
+        {/* Real-Time Notification Bell Popover */}
+        <div className="relative" ref={dropdownRef}>
+          <button 
+            onClick={() => setShowNotifMenu(!showNotifMenu)}
+            className="relative p-2 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition active:scale-95"
+            title="Activity Notifications"
+          >
+            <Bell className="w-4 h-4" />
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[#ff5c8a] text-white text-[10px] font-black flex items-center justify-center shadow-xs animate-bounce">
+                {unreadCount}
+              </span>
+            )}
+          </button>
+
+          {/* Floating Dropdown Drawer */}
+          {showNotifMenu && (
+            <div className="absolute right-0 mt-3 w-80 sm:w-96 bg-white border border-slate-200 rounded-2xl shadow-2xl p-4 animate-in fade-in zoom-in-95 z-50">
+              {/* Dropdown Header */}
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div className="flex items-center gap-2">
+                  <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                    {isHR ? 'HR Team Alerts' : 'My Work Updates'}
+                  </h4>
+                  {unreadCount > 0 && (
+                    <span className="px-2 py-0.5 rounded-full bg-pink-100 text-[#ff5c8a] text-[10px] font-bold">
+                      {unreadCount} New
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2 text-[11px]">
+                  {unreadCount > 0 && (
+                    <button
+                      onClick={() => onMarkAllRead && onMarkAllRead(isHR ? 'hr' : 'employee', employeeId)}
+                      className="text-purple-700 hover:text-purple-900 font-semibold"
+                    >
+                      Mark all read
+                    </button>
+                  )}
+                  {relevantNotifications.length > 0 && (
+                    <button
+                      onClick={() => onClearAll && onClearAll(isHR ? 'hr' : 'employee', employeeId)}
+                      className="text-slate-400 hover:text-rose-600 transition p-1"
+                      title="Clear notifications"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Notifications List */}
+              <div className="max-h-80 overflow-y-auto divide-y divide-slate-100 py-1 space-y-1">
+                {relevantNotifications.length === 0 ? (
+                  <div className="py-8 text-center text-slate-400 text-xs">
+                    <Bell className="w-8 h-8 text-slate-300 mx-auto mb-2 stroke-[1.5]" />
+                    <p className="font-semibold text-slate-600">All caught up!</p>
+                    <p className="text-[11px] text-slate-400 mt-0.5">No new notifications at this time.</p>
+                  </div>
+                ) : (
+                  relevantNotifications.map((notif) => (
+                    <div
+                      key={notif.id}
+                      onClick={() => onMarkRead && onMarkRead(notif.id)}
+                      className={`p-3 rounded-xl transition cursor-pointer flex items-start gap-3 ${
+                        notif.read ? 'bg-white hover:bg-slate-50 opacity-75' : 'bg-purple-50/50 hover:bg-purple-50/80 border border-purple-100/60'
+                      }`}
+                    >
+                      <div className="mt-0.5 p-1.5 rounded-lg bg-white border border-slate-200/80 shadow-xs">
+                        {getNotifIcon(notif.type)}
+                      </div>
+
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-1">
+                          <p className="text-xs font-bold text-slate-800 truncate">{notif.title}</p>
+                          <span className="text-[10px] text-slate-400 font-mono shrink-0">{notif.timeAgo || 'Just now'}</span>
+                        </div>
+                        <p className="text-[11px] text-slate-600 mt-0.5 leading-relaxed">
+                          {notif.message}
+                        </p>
+                      </div>
+
+                      {!notif.read && (
+                        <span className="w-2 h-2 rounded-full bg-[#ff5c8a] mt-1.5 shrink-0" />
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* User Profile Info & Sign Out */}
         <div className="flex items-center gap-3 pl-3 border-l border-slate-200">

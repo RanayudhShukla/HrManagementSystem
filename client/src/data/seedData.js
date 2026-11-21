@@ -106,7 +106,7 @@ export const SEED_EMPLOYEES = [
     "allocationStatus": "Fully Booked",
     "allocationPercent": 100,
     "assignedProjectId": "PROJ-203",
-    "assignedProjectName": "Q4 India Tech Hiring Ramp",
+    "assignedProjectName": "Q4 Global Tech Hiring Ramp",
     "leaveBalance": {
       "paid": 12,
       "sick": 5,
@@ -206,7 +206,7 @@ export const SEED_PROJECTS = [
   {
     "id": "PROJ-201",
     "name": "BharatPay UPI & Banking Gateway",
-    "client": "BharatPay India Financial Technologies",
+    "client": "BharatPay Financial Technologies",
     "status": "In Progress",
     "lead": "David Chen",
     "startDate": "2024-05-01",
@@ -247,8 +247,8 @@ export const SEED_PROJECTS = [
   },
   {
     "id": "PROJ-203",
-    "name": "Q4 India Tech Hiring Ramp",
-    "client": "Internal HR Operations (India)",
+    "name": "Q4 Global Tech Hiring Ramp",
+    "client": "Internal HR Operations",
     "status": "In Progress",
     "lead": "Kavita Verma",
     "startDate": "2024-09-01",
@@ -346,7 +346,7 @@ export const SEED_TASKS = [
     "id": "TSK-302",
     "employeeId": "EMP-1001",
     "title": "Optimize Core Web Vitals for Merchant Dashboard",
-    "description": "Audit chunk splitting in Vite/React to achieve < 1.2s LCP on mobile 4G networks across Tier-2 Indian cities.",
+    "description": "Audit chunk splitting in Vite/React to achieve < 1.2s LCP on mobile 4G networks across regional tier cities.",
     "projectName": "BharatPay UPI & Banking Gateway",
     "assignedBy": "David Chen (Lead PM)",
     "deadline": "2026-12-05",
@@ -411,8 +411,8 @@ export const SEED_TASKS = [
     "id": "TSK-307",
     "employeeId": "EMP-1004",
     "title": "Screen & Schedule 12 Senior React/Node Developer Interviews",
-    "description": "Conduct initial round HR screenings, CTC expectation alignment (Indian market rates), and schedule L1 tech rounds with Vikram.",
-    "projectName": "Q4 India Tech Hiring Ramp",
+    "description": "Conduct initial round HR screenings, CTC expectation alignment (market benchmark rates), and schedule L1 tech rounds with Vikram.",
+    "projectName": "Q4 Global Tech Hiring Ramp",
     "assignedBy": "HR Director",
     "deadline": "2026-11-25",
     "priority": "High",
@@ -425,7 +425,7 @@ export const SEED_TASKS = [
     "employeeId": "EMP-1004",
     "title": "Prepare Annual Performance Appraisal & Increment Cycle Guidelines",
     "description": "Draft FY2026-27 appraisal rubric, bell curve distribution guidelines, and manager training deck.",
-    "projectName": "Internal HR Operations (India)",
+    "projectName": "Internal HR Operations",
     "assignedBy": "HR Director",
     "deadline": "2026-12-10",
     "priority": "Medium",
@@ -471,5 +471,61 @@ export const SEED_TASKS = [
     "status": "In Progress",
     "estimatedHours": "16 hrs",
     "category": "Backend Engineering"
+  }
+];
+
+export const SEED_NOTIFICATIONS = [
+  {
+    id: 'NOTIF-101',
+    title: 'Task Completed',
+    message: 'Aarav Sharma completed sprint deliverable: "Develop Biometric Attendance API & Redis Caching".',
+    type: 'task_completed',
+    targetRole: 'hr',
+    timestamp: '10:45 AM',
+    read: false,
+    createdAt: '2026-11-20T10:45:00.000Z'
+  },
+  {
+    id: 'NOTIF-102',
+    title: 'Project Assignment Update',
+    message: 'HR has assigned you to "AI Workflow Automation Engine" at 50% capacity.',
+    type: 'project_assigned',
+    targetRole: 'employee',
+    targetEmployeeId: 'EMP-1001',
+    timestamp: '09:30 AM',
+    read: false,
+    createdAt: '2026-11-20T09:30:00.000Z'
+  },
+  {
+    id: 'NOTIF-103',
+    title: 'Project Staffing Confirmed',
+    message: 'HR has assigned you to "NextGen Cloud Payroll Platform" at 50% capacity.',
+    type: 'project_assigned',
+    targetRole: 'employee',
+    targetEmployeeId: 'EMP-1002',
+    timestamp: '09:15 AM',
+    read: true,
+    createdAt: '2026-11-20T09:15:00.000Z'
+  },
+  {
+    id: 'NOTIF-104',
+    title: 'Leave Request Approved',
+    message: 'Your Paid Time Off request for 2 days has been approved by HR.',
+    type: 'leave_approved',
+    targetRole: 'employee',
+    targetEmployeeId: 'EMP-1001',
+    timestamp: 'Yesterday',
+    read: true,
+    createdAt: '2026-11-19T14:20:00.000Z'
+  },
+  {
+    id: 'NOTIF-105',
+    title: 'Workforce Capacity Alert',
+    message: 'Marcus Vance is currently unassigned (Bench). Review availability for upcoming client RFPs.',
+    type: 'system',
+    targetRole: 'hr',
+    timestamp: 'Yesterday',
+    read: true,
+    createdAt: '2026-11-19T11:00:00.000Z'
   }
 ];

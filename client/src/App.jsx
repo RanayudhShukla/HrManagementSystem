@@ -9,7 +9,7 @@ import LeaveManager from './components/LeaveManager';
 import EmployeePortal from './components/EmployeePortal';
 import LoginPage from './components/LoginPage';
 import { Check, AlertCircle } from 'lucide-react';
-import { SEED_EMPLOYEES, SEED_PROJECTS, SEED_LEAVES, SEED_TASKS } from './data/seedData';
+import { SEED_EMPLOYEES, SEED_PROJECTS, SEED_LEAVES, SEED_TASKS, SEED_NOTIFICATIONS } from './data/seedData';
 import { 
   syncEmployeeToFirestore, syncProjectToFirestore, 
   syncLeaveToFirestore, syncTaskToFirestore,
@@ -110,9 +110,76 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [toast, setToast] = useState('');
 
+  // Two-way Connected Notification System
+  const [notifications, setNotifications] = useState(() => {
+    try {
+      const saved = localStorage.getItem('cooperate_notifications');
+      return saved ? JSON.parse(saved) : SEED_NOTIFICATIONS;
+    } catch {
+      return SEED_NOTIFICATIONS;
+    }
+  });
+
   const showToast = (msg) => {
     setToast(msg);
     setTimeout(() => setToast(''), 3500);
+  };
+
+  const addNotification = (notif) => {
+    setNotifications((prev) => {
+      const updated = [
+        {
+          id: `NOTIF-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          read: false,
+          createdAt: new Date().toISOString(),
+          ...notif,
+        },
+        ...prev,
+      ];
+      localStorage.setItem('cooperate_notifications', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  const handleMarkNotificationRead = (notifId) => {
+    setNotifications((prev) => {
+      const updated = prev.map((n) => (n.id === notifId ? { ...n, read: true } : n));
+      localStorage.setItem('cooperate_notifications', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  const handleMarkAllNotificationsRead = () => {
+    const isHR = currentUser?.role === 'hr';
+    const empId = currentUser?.employee?.id;
+
+    setNotifications((prev) => {
+      const updated = prev.map((n) => {
+        const isTarget = isHR
+          ? n.targetRole === 'hr' || n.targetRole === 'all'
+          : n.targetRole === 'all' || n.targetEmployeeId === empId;
+        return isTarget ? { ...n, read: true } : n;
+      });
+      localStorage.setItem('cooperate_notifications', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  const handleClearNotifications = () => {
+    const isHR = currentUser?.role === 'hr';
+    const empId = currentUser?.employee?.id;
+
+    setNotifications((prev) => {
+      const updated = prev.filter((n) => {
+        const isTarget = isHR
+          ? n.targetRole === 'hr' || n.targetRole === 'all'
+          : n.targetRole === 'all' || n.targetEmployeeId === empId;
+        return !isTarget;
+      });
+      localStorage.setItem('cooperate_notifications', JSON.stringify(updated));
+      return updated;
+    });
   };
 
   const handleLogin = (user) => {
@@ -134,7 +201,7 @@ export default function App() {
     showToast('Signed out successfully.');
   };
 
-  // 1. ALLOCATE RESOURCE HANDLER (Instant Reactive State)
+  // 1. ALLOCATE RESOURCE HANDLER (Instant Reactive State + Notification)
   const handleAllocateEmployee = async (employeeId, projectId, pct) => {
     const proj = projects.find((p) => p.id === projectId);
     const emp = employees.find((e) => e.id === employeeId);
@@ -171,6 +238,15 @@ export default function App() {
     setStats(computeStats(updatedEmployees, updatedProjects, leaves));
     showToast(`${emp.name} allocated to ${proj.name} at ${pct}% capacity!`);
 
+    // Notify the assigned employee immediately
+    addNotification({
+      title: 'Project Assignment Updated',
+      message: `HR has assigned you to project "${proj.name}" at ${pct}% capacity.`,
+      type: 'project_assigned',
+      targetRole: 'employee',
+      targetEmployeeId: employeeId,
+    });
+
     // Cloud Firestore Sync (Background)
     const targetEmp = updatedEmployees.find((e) => e.id === employeeId);
     if (targetEmp) syncEmployeeToFirestore(targetEmp);
@@ -187,7 +263,7 @@ export default function App() {
     } catch {}
   };
 
-  // 2. DEALLOCATE RESOURCE HANDLER (Instant Reactive State)
+  // 2. DEALLOCATE RESOURCE HANDLER (Instant Reactive State + Notification)
   const handleDeallocateEmployee = async (employeeId) => {
     const emp = employees.find((e) => e.id === employeeId);
     if (!emp) return;
@@ -218,6 +294,15 @@ export default function App() {
     localStorage.setItem('pulsehr_projects', JSON.stringify(updatedProjects));
     setStats(computeStats(updatedEmployees, updatedProjects, leaves));
     showToast(`${emp.name} released and returned to Bench.`);
+
+    // Notify employee that they have returned to Bench
+    addNotification({
+      title: 'Resource Released to Bench',
+      message: `HR released you from your project assignment. You are now available on Bench for new projects.`,
+      type: 'project_assigned',
+      targetRole: 'employee',
+      targetEmployeeId: employeeId,
+    });
 
     // Cloud Firestore Sync (Background)
     const targetEmp = updatedEmployees.find((e) => e.id === employeeId);
@@ -280,7 +365,7 @@ export default function App() {
     } catch {}
   };
 
-  // 5. CREATE PROJECT HANDLER
+  // 5. CREATE PROJECT HANDLER (Instant State + Notify Assigned Employees)
   const handleCreateProject = async (newProj) => {
     const createdProj = {
       id: `PROJ-${Math.floor(200 + Math.random() * 800)}`,
@@ -299,6 +384,19 @@ export default function App() {
     setStats(computeStats(employees, updatedProjects, leaves));
     showToast(`Project ${createdProj.name} created!`);
 
+    // Notify any employees allocated to this new project
+    if (Array.isArray(createdProj.allocatedMembers) && createdProj.allocatedMembers.length > 0) {
+      createdProj.allocatedMembers.forEach((memId) => {
+        addNotification({
+          title: 'Assigned to New Project',
+          message: `HR has assigned you to new project: "${createdProj.name}" (${createdProj.client || 'Client Account'}).`,
+          type: 'project_assigned',
+          targetRole: 'employee',
+          targetEmployeeId: memId,
+        });
+      });
+    }
+
     syncProjectToFirestore(createdProj);
     try {
       await fetch('/api/projects', {
@@ -309,15 +407,15 @@ export default function App() {
     } catch {}
   };
 
-  // 6. UPDATE LEAVE STATUS HANDLER (Approve/Reject)
+  // 6. UPDATE LEAVE STATUS HANDLER (Approve/Reject + Notify Employee)
   const handleUpdateLeaveStatus = async (leaveId, status) => {
+    const targetLeave = leaves.find((l) => l.id === leaveId);
     const updatedLeaves = leaves.map((l) => (l.id === leaveId ? { ...l, status } : l));
     setLeaves(updatedLeaves);
     localStorage.setItem('pulsehr_leaves', JSON.stringify(updatedLeaves));
 
     // If approved, decrement employee leave balance
     if (status === 'Approved') {
-      const targetLeave = leaves.find((l) => l.id === leaveId);
       if (targetLeave) {
         const updatedEmployees = employees.map((emp) => {
           if (emp.id === targetLeave.employeeId && emp.leaveBalance) {
@@ -345,6 +443,17 @@ export default function App() {
     setStats(computeStats(employees, projects, updatedLeaves));
     showToast(`Leave request marked as ${status}!`);
 
+    // Notify employee of approval/rejection decision
+    if (targetLeave) {
+      addNotification({
+        title: `Leave Request ${status}`,
+        message: `HR has ${status.toLowerCase()} your request for ${targetLeave.leaveType} (${targetLeave.daysCount} days).`,
+        type: status === 'Approved' ? 'leave_approved' : 'leave_rejected',
+        targetRole: 'employee',
+        targetEmployeeId: targetLeave.employeeId,
+      });
+    }
+
     const targetL = updatedLeaves.find((l) => l.id === leaveId);
     if (targetL) syncLeaveToFirestore(targetL);
 
@@ -355,6 +464,44 @@ export default function App() {
         body: JSON.stringify({ status }),
       });
     } catch {}
+  };
+
+  // 7. EMPLOYEE COMPLETES TASK -> NOTIFY HR
+  const handleTaskCompleted = (task, employeeName) => {
+    addNotification({
+      title: 'Task Completed',
+      message: `${employeeName} completed sprint task: "${task.title}" (${task.projectName || 'Project'}).`,
+      type: 'task_completed',
+      targetRole: 'hr',
+    });
+    showToast(`Task "${task.title}" marked Completed! HR has been notified.`);
+  };
+
+  // 8. EMPLOYEE APPLIES FOR LEAVE -> NOTIFY HR
+  const handleLeaveApplied = (leaveData, employeeName) => {
+    const newLeaveEntry = {
+      id: `LV-${Math.floor(100 + Math.random() * 900)}`,
+      employeeId: currentUser?.employee?.id,
+      employeeName: employeeName,
+      ...leaveData,
+      status: 'Pending',
+      appliedOn: new Date().toISOString().split('T')[0],
+    };
+
+    const updatedLeaves = [newLeaveEntry, ...leaves];
+    setLeaves(updatedLeaves);
+    localStorage.setItem('pulsehr_leaves', JSON.stringify(updatedLeaves));
+    setStats(computeStats(employees, projects, updatedLeaves));
+
+    addNotification({
+      title: 'New Leave Request Filed',
+      message: `${employeeName} applied for ${leaveData.leaveType} (${leaveData.daysCount} days: ${leaveData.startDate} to ${leaveData.endDate}).`,
+      type: 'leave_applied',
+      targetRole: 'hr',
+    });
+
+    syncLeaveToFirestore(newLeaveEntry);
+    showToast('Leave request submitted! HR has been notified.');
   };
 
   // Background Cloud Sync
@@ -438,6 +585,10 @@ export default function App() {
           setSearchQuery={setSearchQuery}
           currentUser={currentUser}
           onLogout={handleLogout}
+          notifications={notifications}
+          onMarkRead={handleMarkNotificationRead}
+          onMarkAllRead={handleMarkAllNotificationsRead}
+          onClearAll={handleClearNotifications}
         />
 
         {/* Main Content */}
@@ -449,6 +600,7 @@ export default function App() {
                 <DashboardOverview
                   stats={stats}
                   onNavigateToTab={(tab) => setActiveHRTab(tab)}
+                  notifications={notifications}
                 />
               )}
 
@@ -491,6 +643,9 @@ export default function App() {
               leaves={leaves}
               activeSubTab={employeeTab}
               onSubTabChange={setEmployeeTab}
+              notifications={notifications}
+              onTaskCompleted={handleTaskCompleted}
+              onLeaveApplied={handleLeaveApplied}
               onLeaveSubmitted={() => {
                 showToast('Leave request submitted! Awaiting manager approval.');
               }}

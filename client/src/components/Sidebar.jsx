@@ -1,7 +1,7 @@
 import React from 'react';
 import { 
   ClipboardCheck, LayoutDashboard, Users, TrendingUp, Briefcase, 
-  CalendarCheck, UserCheck, LogOut, CheckSquare, Calendar, IndianRupee 
+  CalendarCheck, UserCheck, LogOut, CheckSquare, Calendar, Banknote 
 } from 'lucide-react';
 
 export default function Sidebar({
@@ -28,9 +28,9 @@ export default function Sidebar({
 
   const employeeMenuItems = [
     { id: 'tasks', label: 'Assigned Tasks & Work', icon: CheckSquare },
-    { id: 'holidays', label: 'Indian Holidays 2026', icon: Calendar, badge: '17' },
+    { id: 'holidays', label: 'Corporate Holidays 2026', icon: Calendar, badge: '17' },
     { id: 'leaves', label: 'Leave Requests', icon: CalendarCheck },
-    { id: 'payroll', label: 'CTC & Compensation (INR)', icon: IndianRupee },
+    { id: 'payroll', label: 'CTC & Compensation', icon: Banknote },
   ];
 
   return (

@@ -1,11 +1,13 @@
 import React from 'react';
 import { 
   Users, Briefcase, CalendarCheck, Clock, CheckCircle2, 
-  TrendingUp, FileText, CheckSquare, Coffee, AlertCircle, ArrowUpRight 
+  TrendingUp, FileText, CheckSquare, Coffee, AlertCircle, ArrowUpRight, Bell 
 } from 'lucide-react';
 
-export default function DashboardOverview({ stats, onNavigateToTab }) {
+export default function DashboardOverview({ stats, onNavigateToTab, notifications = [] }) {
   if (!stats) return null;
+
+  const hrNotifications = notifications.filter((n) => n.targetRole === 'hr' || n.targetRole === 'all');
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -280,6 +282,46 @@ export default function DashboardOverview({ stats, onNavigateToTab }) {
                 </span>
               </div>
             ))}
+          </div>
+        </div>
+
+        {/* LIVE TEAM ACTIVITY & NOTIFICATIONS (Real-time connected stream) */}
+        <div className="p-6 rounded-2xl bg-white border border-slate-200/80 shadow-xs space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+              <Bell className="w-4 h-4 text-[#ff5c8a]" />
+              Live Team Activity & Alerts
+            </h3>
+            <span className="text-[10px] font-mono text-purple-700 bg-purple-50 font-bold px-2 py-0.5 rounded-full">
+              Real-Time Feed
+            </span>
+          </div>
+
+          <div className="space-y-2.5 max-h-64 overflow-y-auto">
+            {hrNotifications.length === 0 ? (
+              <p className="text-xs text-slate-400 py-4 text-center">No recent team activities recorded.</p>
+            ) : (
+              hrNotifications.slice(0, 5).map((n) => (
+                <div key={n.id} className="p-3 rounded-xl bg-[#f8f9fc] border border-slate-100 flex items-start gap-2.5">
+                  <div className="mt-0.5 shrink-0">
+                    {n.type === 'task_completed' ? (
+                      <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                    ) : n.type === 'leave_applied' ? (
+                      <CalendarCheck className="w-4 h-4 text-amber-500" />
+                    ) : (
+                      <Briefcase className="w-4 h-4 text-[#ff5c8a]" />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-1">
+                      <p className="text-xs font-bold text-slate-800 truncate">{n.title}</p>
+                      <span className="text-[10px] text-slate-400 font-mono shrink-0">{n.timeAgo || 'Just now'}</span>
+                    </div>
+                    <p className="text-[11px] text-slate-600 mt-0.5 leading-snug">{n.message}</p>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>
