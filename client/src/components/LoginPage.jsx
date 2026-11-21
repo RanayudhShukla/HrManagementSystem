@@ -34,7 +34,13 @@ export default function LoginPage({ onLogin, employees }) {
 
     if (role === 'hr') {
       // HR Admin verification
-      if (cleanEmail === 'admin@pulsehr.com' || cleanEmail.includes('admin') || cleanEmail.includes('hr')) {
+      if (
+        cleanEmail === 'admin@cooperatehrms.com' ||
+        cleanEmail === 'admin@cooperate.com' ||
+        cleanEmail === 'admin@pulsehr.com' ||
+        cleanEmail.includes('admin') ||
+        cleanEmail.includes('hr')
+      ) {
         onLogin({
           role: 'hr',
           name: 'Dylan Hunter',
@@ -42,13 +48,15 @@ export default function LoginPage({ onLogin, employees }) {
           title: 'HR Operations Lead',
         });
       } else {
-        setError('Invalid HR Admin credentials. Please use your corporate HR email.');
+        setError('Invalid HR Admin credentials. Please use admin@cooperatehrms.com or your corporate HR email.');
         setLoading(false);
       }
     } else {
       // Employee verification directly from employees database
       const matchedEmployee = employees.find(
-        (emp) => emp.email.toLowerCase() === cleanEmail
+        (emp) =>
+          emp.email.toLowerCase() === cleanEmail ||
+          emp.email.toLowerCase().split('@')[0] === cleanEmail.split('@')[0]
       );
 
       if (matchedEmployee) {
@@ -82,9 +90,9 @@ export default function LoginPage({ onLogin, employees }) {
                 <Building2 className="w-6 h-6 stroke-[2.5]" />
               </div>
               <div>
-                <h1 className="text-xl font-bold tracking-tight text-white flex items-center gap-1">
-                  <span>Pulse</span>
-                  <span className="text-[#ff5c8a]">HR</span>
+                <h1 className="text-xl font-bold tracking-tight text-white flex items-center gap-1.5">
+                  <span>Co-Operate</span>
+                  <span className="text-[#ff5c8a]">HRMS</span>
                 </h1>
                 <p className="text-[10px] text-purple-200/80 font-mono uppercase tracking-wider">
                   Enterprise Workforce Portal
@@ -120,7 +128,7 @@ export default function LoginPage({ onLogin, employees }) {
 
           {/* Bottom Copyright */}
           <div className="relative z-10 text-[11px] text-purple-200/60 font-mono">
-            © 2026 PulseHR Enterprise Suite. All rights reserved.
+            © 2026 Co-Operate HRMS Suite. All rights reserved.
           </div>
         </div>
 
@@ -179,7 +187,7 @@ export default function LoginPage({ onLogin, employees }) {
                   <input
                     type="email"
                     required
-                    placeholder={role === 'hr' ? 'admin@pulsehr.com' : 'e.g. aarav.sharma@pulsehr.com'}
+                    placeholder={role === 'hr' ? 'admin@cooperatehrms.com' : 'e.g. aarav.sharma@cooperate.com'}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="w-full bg-[#f8f9fc] border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#452473]/20"

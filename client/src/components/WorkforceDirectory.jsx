@@ -212,7 +212,7 @@ export default function WorkforceDirectory({
                   <input
                     type="email"
                     required
-                    placeholder="rachel.z@pulsehr.com"
+                    placeholder="rachel.z@cooperate.com"
                     value={newEmp.email}
                     onChange={(e) => setNewEmp({ ...newEmp, email: e.target.value })}
                     className="w-full bg-[#f8f9fc] border border-slate-200 rounded-xl px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#452473]/20"

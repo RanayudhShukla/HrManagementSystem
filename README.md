@@ -1,4 +1,4 @@
-# 🏢 PulseHR — Enterprise Workforce & Resource Intelligence Platform
+# 🏢 Co-Operate HRMS — Enterprise Workforce & Resource Intelligence Platform
 
 [![Node.js](https://img.shields.io/badge/Node.js-v20%2B-green.svg)](https://nodejs.org/)
 [![React](https://img.shields.io/badge/React-19.0-61dafb.svg)](https://react.dev/)
@@ -34,11 +34,11 @@ The platform utilizes direct email/password verification against the company dir
 
 | Role | Work Email | Password | Access & Permissions |
 | :--- | :--- | :--- | :--- |
-| **HR Administrator** | `admin@pulsehr.com` | `admin123` | Full administrative control: Workforce directory, bench allocation, project staffing, leave approval/rejection, and analytics. |
-| **Lead Frontend Dev** | `aarav.sharma@pulsehr.com` | `any password` | ESS Portal: Assigned sprint deliverables (UPI Gateway), leave balances, Indian holiday calendar, CTC breakdown. |
-| **Principal UI Designer** | `elena.r@pulsehr.com` | `any password` | ESS Portal: Vortex Cloud design deliverables, attendance tracking, leave requests history. |
-| **Backend Engineer** | `marcus.v@pulsehr.com` | `any password` | ESS Portal: Bench upskilling deliverables, personal attendance, leave application. |
-| **Talent Acquisition Mgr**| `kavita.v@pulsehr.com` | `any password` | ESS Portal: Technical hiring deliverables, leave records. |
+| **HR Administrator** | `admin@cooperatehrms.com` | `admin123` | Full administrative control: Workforce directory, bench allocation, project staffing, leave approval/rejection, and analytics. |
+| **Lead Frontend Dev** | `aarav.sharma@cooperate.com` | `any password` | ESS Portal: Assigned sprint deliverables (UPI Gateway), leave balances, Indian holiday calendar, CTC breakdown. |
+| **Principal UI Designer** | `elena.r@cooperate.com` | `any password` | ESS Portal: Vortex Cloud design deliverables, attendance tracking, leave requests history. |
+| **Backend Engineer** | `marcus.v@cooperate.com` | `any password` | ESS Portal: Bench upskilling deliverables, personal attendance, leave application. |
+| **Talent Acquisition Mgr**| `kavita.v@cooperate.com` | `any password` | ESS Portal: Technical hiring deliverables, leave records. |
 
 ---
 
@@ -122,8 +122,8 @@ The platform utilizes direct email/password verification against the company dir
 ### 1. Installation
 ```bash
 # Clone the repository
-git clone https://github.com/<YOUR_USERNAME>/pulsehr-enterprise.git
-cd pulsehr-enterprise
+git clone https://github.com/<YOUR_USERNAME>/co-operate-hrms.git
+cd co-operate-hrms
 
 # Install dependencies
 npm install

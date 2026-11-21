@@ -2,7 +2,7 @@ export const SEED_EMPLOYEES = [
   {
     "id": "EMP-1001",
     "name": "Aarav Sharma",
-    "email": "aarav.sharma@pulsehr.com",
+    "email": "aarav.sharma@cooperate.com",
     "phone": "+91 98765 43210",
     "department": "Engineering",
     "role": "Lead Frontend Architect",
@@ -18,10 +18,10 @@ export const SEED_EMPLOYEES = [
       "Performance"
     ],
     "workMode": "Hybrid (Bengaluru HQ)",
-    "allocationStatus": "Fully Booked",
-    "allocationPercent": 100,
-    "assignedProjectId": "PROJ-201",
-    "assignedProjectName": "BharatPay UPI & Banking Gateway",
+    "allocationStatus": "Partially Available",
+    "allocationPercent": 50,
+    "assignedProjectId": "PROJ-204",
+    "assignedProjectName": "AI Workflow Automation Engine",
     "leaveBalance": {
       "paid": 11,
       "sick": 6,
@@ -31,7 +31,7 @@ export const SEED_EMPLOYEES = [
   {
     "id": "EMP-1002",
     "name": "Elena Rostova",
-    "email": "elena.r@pulsehr.com",
+    "email": "elena.r@cooperate.com",
     "phone": "+91 98112 33445",
     "department": "Design",
     "role": "Principal UI/UX Designer",
@@ -59,7 +59,7 @@ export const SEED_EMPLOYEES = [
   {
     "id": "EMP-1003",
     "name": "Marcus Vance",
-    "email": "marcus.v@pulsehr.com",
+    "email": "marcus.v@cooperate.com",
     "phone": "+91 99223 88122",
     "department": "Engineering",
     "role": "Senior Backend Engineer",
@@ -88,7 +88,7 @@ export const SEED_EMPLOYEES = [
   {
     "id": "EMP-1004",
     "name": "Kavita Verma",
-    "email": "kavita.v@pulsehr.com",
+    "email": "kavita.v@cooperate.com",
     "phone": "+91 91234 56789",
     "department": "HR & Operations",
     "role": "Senior Talent Acquisition Manager",
@@ -116,7 +116,7 @@ export const SEED_EMPLOYEES = [
   {
     "id": "EMP-1005",
     "name": "David Chen",
-    "email": "david.chen@pulsehr.com",
+    "email": "david.chen@cooperate.com",
     "phone": "+91 97788 11223",
     "department": "Product",
     "role": "Senior Technical Product Manager",
@@ -145,7 +145,7 @@ export const SEED_EMPLOYEES = [
   {
     "id": "EMP-1006",
     "name": "Sarah Miller",
-    "email": "sarah.m@pulsehr.com",
+    "email": "sarah.m@cooperate.com",
     "phone": "+91 96655 44332",
     "department": "Engineering",
     "role": "Cloud DevOps Engineer",
@@ -174,7 +174,7 @@ export const SEED_EMPLOYEES = [
   {
     "id": "EMP-1007",
     "name": "Vikram Malhotra",
-    "email": "vikram.m@pulsehr.com",
+    "email": "vikram.m@cooperate.com",
     "phone": "+91 99887 76655",
     "department": "Engineering",
     "role": "Full-Stack Software Engineer",
@@ -278,7 +278,9 @@ export const SEED_PROJECTS = [
       "DevOps",
       "Microservices"
     ],
-    "allocatedMembers": [],
+    "allocatedMembers": [
+      "EMP-1001"
+    ],
     "budget": "₹55,00,000",
     "priority": "Urgent"
   }

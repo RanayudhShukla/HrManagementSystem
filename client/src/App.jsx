@@ -69,7 +69,14 @@ export default function App() {
   const [employees, setEmployees] = useState(() => {
     try {
       const saved = localStorage.getItem('pulsehr_employees');
-      return saved ? JSON.parse(saved) : SEED_EMPLOYEES;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return parsed.map((e) => ({
+          ...e,
+          email: e.email ? e.email.replace('@pulsehr.com', '@cooperate.com') : e.email,
+        }));
+      }
+      return SEED_EMPLOYEES;
     } catch {
       return SEED_EMPLOYEES;
     }

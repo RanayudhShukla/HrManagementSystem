@@ -41,9 +41,9 @@ export default function Sidebar({
           <ClipboardCheck className="w-5 h-5 stroke-[2.5]" />
         </div>
         <div>
-          <h1 className="text-lg font-bold tracking-tight text-white flex items-center gap-1">
-            <span>Pulse</span>
-            <span className="text-[#ff5c8a]">HR</span>
+          <h1 className="text-lg font-bold tracking-tight text-white flex items-center gap-1.5">
+            <span>Co-Operate</span>
+            <span className="text-[#ff5c8a]">HRMS</span>
           </h1>
           <p className="text-[10px] text-purple-200/70 font-medium">Enterprise Resource Portal</p>
         </div>

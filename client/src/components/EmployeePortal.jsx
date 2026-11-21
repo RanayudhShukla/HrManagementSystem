@@ -254,7 +254,7 @@ export default function EmployeePortal({
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <span className="px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-900 text-[10px] font-mono font-bold tracking-wide">
-                PULSE TECH INDIA • ESS
+                CO-OPERATE HRMS • ESS
               </span>
               <span className="text-xs text-slate-400 font-mono font-bold">{employee.id}</span>
               <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-semibold flex items-center gap-1">

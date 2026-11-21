@@ -557,14 +557,14 @@ app.get('*', (req, res, next) => {
   const indexPath = path.join(clientDistPath, 'index.html');
   res.sendFile(indexPath, (err) => {
     if (err) {
-      res.status(200).send('PulseHR API is running. Client build in progress or not found.');
+      res.status(200).send('Co-Operate HRMS API is running. Client build in progress or not found.');
     }
   });
 });
 
 if (require.main === module || !process.env.VERCEL) {
   app.listen(PORT, () => {
-    console.log(`PulseHR Enterprise Resource Manager running on http://localhost:${PORT}`);
+    console.log(`Co-Operate HRMS Enterprise Resource Manager running on http://localhost:${PORT}`);
   });
 }
 

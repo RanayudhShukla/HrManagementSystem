@@ -12,7 +12,7 @@ export default function Footer() {
               <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-cyan-500 via-blue-600 to-indigo-600 flex items-center justify-center">
                 <Building2 className="w-4 h-4 text-slate-950 font-bold" />
               </div>
-              <span className="text-base font-bold text-white tracking-tight">PULSE<span className="text-cyan-400">HR</span></span>
+              <span className="text-base font-bold text-white tracking-tight">Co-Operate <span className="text-cyan-400">HRMS</span></span>
             </div>
             <p className="text-slate-400 max-w-sm leading-relaxed">
               Enterprise Human Resource Management & Workforce Capacity Allocation Suite. Designed for modern technology firms, agencies, and consulting enterprises.
@@ -52,7 +52,7 @@ export default function Footer() {
         </div>
 
         <div className="mt-8 pt-8 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between text-slate-500 gap-4">
-          <p>© 2026 PulseHR Enterprise. Internship Capstone Project.</p>
+          <p>© 2026 Co-Operate HRMS Enterprise. Internship Capstone Project.</p>
           <p className="text-slate-500 font-mono text-[11px]">Built with HTML, CSS, JavaScript, React & Express</p>
         </div>
       </div>
