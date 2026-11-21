@@ -24,8 +24,9 @@ class ErrorBoundary extends React.Component {
       const saved = localStorage.getItem('pulsehr_employees');
       if (saved) {
         const parsed = JSON.parse(saved);
+        const legacyNames = ['aarav sharma', 'elena rostova', 'marcus vance', 'kavita verma', 'david chen', 'sarah miller', 'vikram malhotra', 'vikram batra'];
         const cleaned = (Array.isArray(parsed) ? parsed : [])
-          .filter((e) => !['EMP-1001', 'EMP-1002', 'EMP-1003', 'EMP-1004', 'EMP-1005', 'EMP-1006', 'EMP-1007', 'EMP-1008'].includes(e.id) && !['Aarav Sharma', 'Elena Rostova', 'Marcus Vance', 'Kavita Verma', 'David Chen', 'Sarah Miller', 'Vikram Malhotra', 'Vikram Batra'].includes(e.name))
+          .filter((e) => e && !legacyNames.includes((e.name || '').trim().toLowerCase()) && !(e.email || '').toLowerCase().includes('@pulsehr.com'))
           .map((e) => ({
             ...e,
             skills: Array.isArray(e.skills)

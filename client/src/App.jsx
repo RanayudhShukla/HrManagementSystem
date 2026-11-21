@@ -43,9 +43,9 @@ const broadcastSync = (payload) => {
 };
 
 function computeStats(emps, projs, lvs) {
-  const safeEmps = Array.isArray(emps) ? emps : [];
-  const safeProjs = Array.isArray(projs) ? projs : [];
-  const safeLvs = Array.isArray(lvs) ? lvs : [];
+  const safeEmps = (Array.isArray(emps) ? emps : []).filter((e) => e && typeof e === 'object');
+  const safeProjs = (Array.isArray(projs) ? projs : []).filter((p) => p && typeof p === 'object');
+  const safeLvs = (Array.isArray(lvs) ? lvs : []).filter((l) => l && typeof l === 'object');
 
   const totalHeadcount = safeEmps.length;
   const benchCount = safeEmps.filter((e) => (e.allocationStatus || 'Available (Bench)').toLowerCase().includes('bench') || (e.allocationPercent || 0) === 0).length;
@@ -88,9 +88,24 @@ function computeStats(emps, projs, lvs) {
   };
 }
 
-// Legacy demo identities permanently purged from the production database
-const DEMO_EMPLOYEE_IDS = new Set(['EMP-1001', 'EMP-1002', 'EMP-1003', 'EMP-1004', 'EMP-1005', 'EMP-1006', 'EMP-1007', 'EMP-3201']);
-const DEMO_NAMES = new Set(['Aarav Sharma', 'Elena Rostova', 'Marcus Vance', 'Kavita Verma', 'David Chen', 'Sarah Miller', 'Vikram Malhotra', 'Vikram Batra']);
+// Legacy demo identities (Elena Rostova, Aarav Sharma, etc. from initial mock templates)
+const LEGACY_DEMO_NAMES = new Set([
+  'aarav sharma',
+  'elena rostova',
+  'marcus vance',
+  'kavita verma',
+  'david chen',
+  'sarah miller',
+  'vikram malhotra',
+  'vikram batra',
+]);
+
+export const isLegacyDemoEmployee = (emp) => {
+  if (!emp) return false;
+  const name = (typeof emp === 'string' ? emp : emp.name || '').trim().toLowerCase();
+  const email = (typeof emp === 'object' && emp.email ? emp.email : '').trim().toLowerCase();
+  return LEGACY_DEMO_NAMES.has(name) || email.includes('@pulsehr.com');
+};
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState(() => {
@@ -98,7 +113,7 @@ export default function App() {
       const session = sessionStorage.getItem('pulsehr_auth');
       if (session) {
         const parsed = JSON.parse(session);
-        if (parsed?.role === 'employee' && (DEMO_EMPLOYEE_IDS.has(parsed.employee?.id) || DEMO_NAMES.has(parsed.employee?.name))) {
+        if (parsed?.role === 'employee' && isLegacyDemoEmployee(parsed.employee)) {
           sessionStorage.removeItem('pulsehr_auth');
         } else {
           return parsed;
@@ -107,7 +122,7 @@ export default function App() {
       const saved = localStorage.getItem('pulsehr_auth');
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (parsed?.role === 'employee' && (DEMO_EMPLOYEE_IDS.has(parsed.employee?.id) || DEMO_NAMES.has(parsed.employee?.name))) {
+        if (parsed?.role === 'employee' && isLegacyDemoEmployee(parsed.employee)) {
           localStorage.removeItem('pulsehr_auth');
           return null;
         }
@@ -129,8 +144,8 @@ export default function App() {
       if (saved) {
         const parsed = JSON.parse(saved);
         // Clean out legacy demo employees so only Admin-added employees exist
-        const realEmployees = parsed
-          .filter((e) => !DEMO_EMPLOYEE_IDS.has(e.id) && !DEMO_NAMES.has(e.name))
+        const realEmployees = (Array.isArray(parsed) ? parsed : [])
+          .filter((e) => e && !isLegacyDemoEmployee(e))
           .map((e) => ({
             ...e,
             allocationStatus: e.allocationStatus || 'Available (Bench)',
@@ -156,11 +171,9 @@ export default function App() {
       const saved = localStorage.getItem('pulsehr_projects');
       if (saved) {
         const parsed = JSON.parse(saved);
-        const cleaned = parsed.map((p) => ({
+        const cleaned = (Array.isArray(parsed) ? parsed : []).map((p) => ({
           ...p,
-          allocatedMembers: Array.isArray(p.allocatedMembers)
-            ? p.allocatedMembers.filter((id) => !DEMO_EMPLOYEE_IDS.has(id))
-            : [],
+          allocatedMembers: Array.isArray(p.allocatedMembers) ? p.allocatedMembers : [],
         }));
         localStorage.setItem('pulsehr_projects', JSON.stringify(cleaned));
         return cleaned;
@@ -176,7 +189,7 @@ export default function App() {
       const saved = localStorage.getItem('pulsehr_leaves');
       if (saved) {
         const parsed = JSON.parse(saved);
-        const cleaned = parsed.filter((l) => !DEMO_EMPLOYEE_IDS.has(l.employeeId));
+        const cleaned = (Array.isArray(parsed) ? parsed : []).filter((l) => l && !isLegacyDemoEmployee(l.employeeName));
         localStorage.setItem('pulsehr_leaves', JSON.stringify(cleaned));
         return cleaned;
       }
@@ -807,7 +820,7 @@ export default function App() {
         // If Firestore has employees, sync them to local state & storage
         if (Array.isArray(cloudEmps) && cloudEmps.length > 0) {
           const validEmps = cloudEmps
-            .filter((e) => !DEMO_EMPLOYEE_IDS.has(e.id) && !DEMO_NAMES.has(e.name))
+            .filter((e) => e && !isLegacyDemoEmployee(e))
             .map((e) => ({
               ...e,
               allocationStatus: e.allocationStatus || 'Available (Bench)',
@@ -819,15 +832,17 @@ export default function App() {
                 : ['General'],
               leaveBalance: e.leaveBalance || { paid: 18, sick: 8, casual: 5 },
             }));
-          setEmployees(validEmps);
-          localStorage.setItem('pulsehr_employees', JSON.stringify(validEmps));
+          if (validEmps.length > 0) {
+            setEmployees(validEmps);
+            localStorage.setItem('pulsehr_employees', JSON.stringify(validEmps));
+          }
         } else {
           // If Firestore is empty but we have local employees, push them up to Firestore
           const localEmps = localStorage.getItem('pulsehr_employees');
           if (localEmps) {
             try {
               const parsed = JSON.parse(localEmps);
-              const valid = (Array.isArray(parsed) ? parsed : []).filter((e) => !DEMO_EMPLOYEE_IDS.has(e.id) && !DEMO_NAMES.has(e.name));
+              const valid = (Array.isArray(parsed) ? parsed : []).filter((e) => e && !isLegacyDemoEmployee(e));
               for (const emp of valid) {
                 await syncEmployeeToFirestore(emp);
               }
@@ -836,7 +851,7 @@ export default function App() {
         }
 
         if (Array.isArray(cloudLeaves) && cloudLeaves.length > 0) {
-          const validLeaves = cloudLeaves.filter((l) => !DEMO_EMPLOYEE_IDS.has(l.employeeId));
+          const validLeaves = cloudLeaves.filter((l) => l && !isLegacyDemoEmployee(l.employeeName));
           setLeaves(validLeaves);
           localStorage.setItem('pulsehr_leaves', JSON.stringify(validLeaves));
         }
@@ -847,7 +862,7 @@ export default function App() {
         unsubEmps = subscribeToFirestoreEmployees((cloudEmps) => {
           if (Array.isArray(cloudEmps) && cloudEmps.length > 0) {
             const validEmps = cloudEmps
-              .filter((e) => !DEMO_EMPLOYEE_IDS.has(e.id) && !DEMO_NAMES.has(e.name))
+              .filter((e) => e && !isLegacyDemoEmployee(e))
               .map((e) => ({
                 ...e,
                 allocationStatus: e.allocationStatus || 'Available (Bench)',
@@ -877,7 +892,7 @@ export default function App() {
         // Realtime listener for leaves in Firestore
         unsubLeaves = subscribeToFirestoreLeaves((cloudLeaves) => {
           if (Array.isArray(cloudLeaves)) {
-            const validLeaves = cloudLeaves.filter((l) => !DEMO_EMPLOYEE_IDS.has(l.employeeId));
+            const validLeaves = cloudLeaves.filter((l) => l && !isLegacyDemoEmployee(l.employeeName));
             setLeaves(validLeaves);
             localStorage.setItem('pulsehr_leaves', JSON.stringify(validLeaves));
           }

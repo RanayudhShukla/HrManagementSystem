@@ -313,7 +313,12 @@ export default function EmployeePortal({
       <div className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200/80 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="flex items-center gap-4">
           <div className="w-16 h-16 rounded-2xl bg-[#452473] text-white font-black text-2xl flex items-center justify-center shadow-lg shadow-purple-950/20">
-            {(employee?.name || 'Employee').split(' ').map((n) => n[0]).join('')}
+            {((employee?.name || 'Employee').trim() || 'Employee')
+              .split(/\s+/)
+              .map((n) => (n ? n[0] : ''))
+              .filter(Boolean)
+              .join('')
+              .toUpperCase() || 'E'}
           </div>
           <div>
             <div className="flex flex-wrap items-center gap-2">
@@ -751,14 +756,14 @@ export default function EmployeePortal({
                         }`}
                       >
                         <div className="w-8 h-8 rounded-xl bg-[#452473] text-white font-bold flex items-center justify-center text-xs shadow-xs">
-                          {isMe ? employee.name[0] : 'T'}
+                          {isMe ? (employee?.name ? employee.name[0].toUpperCase() : 'U') : 'T'}
                         </div>
                         <div className="truncate">
                           <span className="font-bold text-slate-900 block truncate">
-                            {isMe ? `${employee.name} (You)` : memId}
+                            {isMe ? `${employee?.name || 'You'} (You)` : memId}
                           </span>
                           <span className="text-[10px] text-slate-400 font-mono">
-                            {isMe ? employee.role : 'Allocated Teammate'}
+                            {isMe ? (employee?.role || 'Staff Member') : 'Allocated Teammate'}
                           </span>
                         </div>
                       </div>

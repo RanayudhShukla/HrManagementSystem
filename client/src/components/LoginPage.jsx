@@ -1,8 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Building2, ShieldCheck, Mail, Lock, ArrowRight, 
-  CheckCircle2, Sparkles, AlertCircle, Key, UserCheck 
+  CheckCircle2, Sparkles, AlertCircle, Key, UserCheck, Users 
 } from 'lucide-react';
+import { getFirestoreEmployees } from '../firebase/firestoreService';
+
+const LEGACY_DEMO_NAMES = new Set([
+  'aarav sharma',
+  'elena rostova',
+  'marcus vance',
+  'kavita verma',
+  'david chen',
+  'sarah miller',
+  'vikram malhotra',
+  'vikram batra',
+]);
+
+const isLegacyDemoEmployee = (emp) => {
+  if (!emp) return false;
+  const name = (typeof emp === 'string' ? emp : emp.name || '').trim().toLowerCase();
+  const email = (typeof emp === 'object' && emp.email ? emp.email : '').trim().toLowerCase();
+  return LEGACY_DEMO_NAMES.has(name) || email.includes('@pulsehr.com');
+};
 
 export default function LoginPage({ onLogin, employees = [] }) {
   const [role, setRole] = useState('hr'); // 'hr' | 'employee'
@@ -10,15 +29,101 @@ export default function LoginPage({ onLogin, employees = [] }) {
   const [password, setPassword] = useState('admin123');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [liveEmployees, setLiveEmployees] = useState(() => {
+    try {
+      const stored = localStorage.getItem('pulsehr_employees');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed.filter((e) => e && !isLegacyDemoEmployee(e));
+        }
+      }
+    } catch {}
+    return (Array.isArray(employees) ? employees : []).filter((e) => e && !isLegacyDemoEmployee(e));
+  });
+
+  // Keep liveEmployees synced with props
+  useEffect(() => {
+    if (Array.isArray(employees) && employees.length > 0) {
+      const filtered = employees.filter((e) => e && !isLegacyDemoEmployee(e));
+      setLiveEmployees(filtered);
+    }
+  }, [employees]);
+
+  // Pre-fetch live employees from Google Cloud Firestore on initial load
+  useEffect(() => {
+    let isMounted = true;
+    const fetchEmployeesForLogin = async () => {
+      try {
+        const cloudEmps = await getFirestoreEmployees();
+        if (isMounted && Array.isArray(cloudEmps) && cloudEmps.length > 0) {
+          const filtered = cloudEmps.filter((e) => e && !isLegacyDemoEmployee(e));
+          if (filtered.length > 0) {
+            setLiveEmployees(filtered);
+            try {
+              localStorage.setItem('pulsehr_employees', JSON.stringify(filtered));
+            } catch {}
+          }
+        }
+      } catch (e) {
+        console.warn('Login page employee pre-fetch notice:', e);
+      }
+    };
+    fetchEmployeesForLogin();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const handleRoleChange = (newRole) => {
     setRole(newRole);
     setError('');
-    setEmail('');
-    setPassword('');
+    if (newRole === 'hr') {
+      setEmail('admin@cooperatehrms.com');
+      setPassword('admin123');
+    } else {
+      if (liveEmployees.length > 0) {
+        const first = liveEmployees[0];
+        setEmail(first.email || first.id || first.name);
+        setPassword(first.defaultPassword || 'Welcome@2026');
+      } else {
+        setEmail('');
+        setPassword('');
+      }
+    }
   };
 
-  const handleSubmit = (e) => {
+  const findEmployeeMatch = (list, query) => {
+    if (!Array.isArray(list) || !query) return null;
+    const cleanQ = query.trim().toLowerCase();
+    const cleanQWithoutPrefix = cleanQ.replace(/^emp[-_ ]*/i, '');
+
+    return list.find((emp) => {
+      if (!emp) return false;
+      const empId = (emp.id || '').toLowerCase().trim();
+      const empIdNum = empId.replace(/^emp[-_ ]*/i, '');
+      const empMail = (emp.email || '').toLowerCase().trim();
+      const empName = (emp.name || '').toLowerCase().trim();
+      const empUsername = empMail.split('@')[0];
+      const firstName = empName.split(' ')[0];
+
+      return (
+        cleanQ === empId ||
+        (cleanQWithoutPrefix && cleanQWithoutPrefix === empIdNum) ||
+        cleanQ === empMail ||
+        cleanQ === empUsername ||
+        cleanQ === empName ||
+        cleanQ === firstName ||
+        (empUsername && cleanQ.includes(empUsername)) ||
+        (empUsername && empUsername.includes(cleanQ)) ||
+        (empName && cleanQ.includes(empName)) ||
+        (empName && empName.includes(cleanQ)) ||
+        (firstName && cleanQ.includes(firstName))
+      );
+    });
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
@@ -52,37 +157,39 @@ export default function LoginPage({ onLogin, employees = [] }) {
         setLoading(false);
       }
     } else {
-      // 1. Always pull latest live employees directly from localStorage to ensure newly created employees are immediately recognized
-      let currentEmployees = employees || [];
+      // 1. Gather all local employees
+      let currentEmployees = liveEmployees.length > 0 ? liveEmployees : (employees || []);
       try {
         const stored = localStorage.getItem('pulsehr_employees');
         if (stored) {
           const parsed = JSON.parse(stored);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            currentEmployees = parsed;
+            currentEmployees = parsed.filter((emp) => emp && !isLegacyDemoEmployee(emp));
           }
         }
       } catch {}
 
-      // 2. Ultra-flexible employee verification by Work Email, Employee ID, Username, or Name
-      const matchedEmployee = currentEmployees.find((emp) => {
-        const empId = (emp.id || '').toLowerCase().trim();
-        const empMail = (emp.email || '').toLowerCase().trim();
-        const empName = (emp.name || '').toLowerCase().trim();
-        const empUsername = empMail.split('@')[0];
-        const firstName = empName.split(' ')[0];
+      let matchedEmployee = findEmployeeMatch(currentEmployees, cleanInput);
 
-        return (
-          cleanInput === empId ||
-          cleanInput === empMail ||
-          cleanInput === empUsername ||
-          cleanInput === empName ||
-          cleanInput === firstName ||
-          (empUsername && cleanInput.includes(empUsername)) ||
-          (empUsername && empUsername.includes(cleanInput)) ||
-          (empName && empName.includes(cleanInput))
-        );
-      });
+      // 2. Fallback: If not found in local memory, directly query Google Cloud Firestore!
+      if (!matchedEmployee) {
+        try {
+          const cloudEmps = await getFirestoreEmployees();
+          if (Array.isArray(cloudEmps) && cloudEmps.length > 0) {
+            const filteredCloud = cloudEmps.filter((emp) => emp && !isLegacyDemoEmployee(emp));
+            if (filteredCloud.length > 0) {
+              currentEmployees = filteredCloud;
+              setLiveEmployees(filteredCloud);
+              try {
+                localStorage.setItem('pulsehr_employees', JSON.stringify(filteredCloud));
+              } catch {}
+              matchedEmployee = findEmployeeMatch(currentEmployees, cleanInput);
+            }
+          }
+        } catch (fetchErr) {
+          console.warn('Direct Firestore login lookup error:', fetchErr);
+        }
+      }
 
       if (matchedEmployee) {
         const expected = matchedEmployee.defaultPassword || matchedEmployee.password || 'Welcome@2026';
@@ -113,7 +220,10 @@ export default function LoginPage({ onLogin, employees = [] }) {
           title: matchedEmployee.role,
         });
       } else {
-        setError(`No active employee found for "${email}". You can enter either your Employee ID (e.g. EMP-1008), Corporate Email, or Employee Name.`);
+        const availableHint = currentEmployees.length > 0
+          ? ` Registered team members: ${currentEmployees.map(e => `${e.name} (${e.id})`).join(', ')}.`
+          : ' No employee accounts found in database. Please log in as HR Admin to onboard employees in the Directory.';
+        setError(`No active employee found for "${email}".${availableHint}`);
         setLoading(false);
       }
     }
@@ -139,14 +249,14 @@ export default function LoginPage({ onLogin, employees = [] }) {
                   <span>Co-Operate</span>
                   <span className="text-[#ff5c8a]">HRMS</span>
                 </h1>
-                <p className="text-[10px] text-purple-200/80 font-mono uppercase tracking-wider">
+                <p className="text-[10px] text-purple-200 tracking-wider uppercase font-semibold">
                   Enterprise Workforce Portal
                 </p>
               </div>
             </div>
 
-            <div className="mt-12 space-y-3">
-              <h2 className="text-2xl font-black text-white leading-tight">
+            <div className="mt-8 space-y-2">
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-white leading-tight">
                 Workforce Capacity & Resource Intelligence
               </h2>
               <p className="text-xs text-purple-200/80 leading-relaxed">
@@ -155,8 +265,8 @@ export default function LoginPage({ onLogin, employees = [] }) {
             </div>
           </div>
 
-          {/* Bottom Features checklist */}
-          <div className="relative z-10 pt-8 border-t border-white/10 space-y-2.5 text-xs text-purple-200/90 font-medium">
+          {/* Bottom Highlights */}
+          <div className="mt-8 pt-6 border-t border-white/10 space-y-2.5 text-xs text-purple-100/90 relative z-10">
             <div className="flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 text-[#ff5c8a] shrink-0" />
               <span>Real-Time Resource Allocation & Staffing Matrix</span>
@@ -230,7 +340,7 @@ export default function LoginPage({ onLogin, employees = [] }) {
                     placeholder={
                       role === 'hr'
                         ? 'admin@cooperatehrms.com'
-                        : 'e.g. EMP-1008, chetan@cooperate.com, or Chetan'
+                        : 'e.g. EMP-1001, chetan@cooperate.com, or Chetan'
                     }
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -253,6 +363,32 @@ export default function LoginPage({ onLogin, employees = [] }) {
                   />
                 </div>
               </div>
+
+              {/* Active Employee Quick Fill Pill */}
+              {role === 'employee' && liveEmployees.length > 0 && (
+                <div className="p-3 bg-purple-50/60 rounded-xl border border-purple-100 space-y-1.5">
+                  <div className="flex items-center gap-1.5 text-[11px] font-bold text-[#452473]">
+                    <Users className="w-3.5 h-3.5" />
+                    <span>Registered Employee Accounts ({liveEmployees.length}):</span>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {liveEmployees.map((emp) => (
+                      <button
+                        key={emp.id}
+                        type="button"
+                        onClick={() => {
+                          setEmail(emp.email || emp.id || emp.name);
+                          setPassword(emp.defaultPassword || 'Welcome@2026');
+                        }}
+                        className="px-2 py-1 bg-white hover:bg-purple-100 text-purple-900 border border-purple-200 rounded-lg text-[10px] font-semibold transition flex items-center gap-1 shadow-xs"
+                      >
+                        <span className="font-bold">{emp.name}</span>
+                        <span className="text-purple-500 font-mono">({emp.id})</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <button
                 type="submit"
