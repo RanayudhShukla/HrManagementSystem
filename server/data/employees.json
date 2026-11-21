@@ -1,5 +1,32 @@
 [
   {
+    "id": "EMP-3201",
+    "name": "Vikram Batra",
+    "email": "vikram.batra@cooperate.com",
+    "phone": "+91 98765 43210",
+    "department": "Engineering",
+    "role": "DevOps Architect",
+    "type": "Full-Time",
+    "status": "Active",
+    "joiningDate": "2026-11-21",
+    "salary": "₹14,50,000 / yr",
+    "skills": [
+      "React",
+      "Node.js",
+      "TypeScript"
+    ],
+    "workMode": "Hybrid (Bengaluru HQ)",
+    "allocationStatus": "Available (Bench)",
+    "allocationPercent": 0,
+    "assignedProjectId": null,
+    "assignedProjectName": "Unassigned (Available for new project)",
+    "leaveBalance": {
+      "paid": 18,
+      "sick": 8,
+      "casual": 5
+    }
+  },
+  {
     "id": "EMP-1001",
     "name": "Aarav Sharma",
     "email": "aarav.sharma@cooperate.com",

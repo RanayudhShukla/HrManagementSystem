@@ -259,9 +259,23 @@ export default function EmployeePortal({
     return true;
   });
 
+  // Robust Project Matching: checks assignedProjectId, assignedProjectName, or membership in project allocatedMembers
   const assignedProject = projects.find(
-    (p) => p.id === employee.assignedProjectId || p.name === employee.assignedProjectName
+    (p) =>
+      (employee?.assignedProjectId && p.id === employee.assignedProjectId) ||
+      (employee?.assignedProjectName && p.name === employee.assignedProjectName && !employee.assignedProjectName.toLowerCase().includes('unassigned')) ||
+      (Array.isArray(p.allocatedMembers) && p.allocatedMembers.includes(employee?.id))
   );
+
+  const activeProjectName = assignedProject
+    ? assignedProject.name
+    : (employee?.assignedProjectName && !employee.assignedProjectName.toLowerCase().includes('unassigned')
+        ? employee.assignedProjectName
+        : 'Unassigned (Available for new project)');
+
+  const activeAllocationPercent = assignedProject
+    ? (employee?.allocationPercent > 0 ? employee.allocationPercent : 100)
+    : (employee?.allocationPercent || 0);
 
   return (
     <div className="space-y-6 animate-in fade-in">
@@ -325,12 +339,12 @@ export default function EmployeePortal({
             <span>Current Assignment</span>
             <Briefcase className="w-4 h-4 text-[#452473]" />
           </div>
-          <p className="text-base font-bold text-slate-900 mt-2 truncate">
-            {employee.assignedProjectName}
+          <p className="text-base font-bold text-slate-900 mt-2 truncate" title={activeProjectName}>
+            {activeProjectName}
           </p>
           <div className="flex items-center justify-between text-[11px] text-slate-500 mt-2">
             <span>Staffed Capacity:</span>
-            <strong className="text-[#ff5c8a] font-bold">{employee.allocationPercent}%</strong>
+            <strong className="text-[#ff5c8a] font-bold">{activeAllocationPercent}%</strong>
           </div>
         </div>
 
@@ -646,7 +660,7 @@ export default function EmployeePortal({
 
                 <div className="p-3.5 rounded-2xl bg-purple-50/50 border border-purple-100 text-right">
                   <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Your Assigned Capacity</span>
-                  <span className="text-lg font-black text-[#ff5c8a]">{employee.allocationPercent}% (Staffed)</span>
+                  <span className="text-lg font-black text-[#ff5c8a]">{activeAllocationPercent}% (Staffed)</span>
                 </div>
               </div>
 

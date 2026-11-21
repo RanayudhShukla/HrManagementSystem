@@ -238,6 +238,17 @@ export default function App() {
     setStats(computeStats(updatedEmployees, updatedProjects, leaves));
     showToast(`${emp.name} allocated to ${proj.name} at ${pct}% capacity!`);
 
+    // If the currently active session is this employee, update session cache immediately
+    if (currentUser?.employee?.id === employeeId) {
+      const updatedEmpObj = updatedEmployees.find((e) => e.id === employeeId);
+      if (updatedEmpObj) {
+        const updatedAuth = { ...currentUser, employee: updatedEmpObj };
+        setCurrentUser(updatedAuth);
+        setSelectedEmployee(updatedEmpObj);
+        localStorage.setItem('pulsehr_auth', JSON.stringify(updatedAuth));
+      }
+    }
+
     // Notify the assigned employee immediately
     addNotification({
       title: 'Project Assignment Updated',
@@ -294,6 +305,17 @@ export default function App() {
     localStorage.setItem('pulsehr_projects', JSON.stringify(updatedProjects));
     setStats(computeStats(updatedEmployees, updatedProjects, leaves));
     showToast(`${emp.name} released and returned to Bench.`);
+
+    // If currently logged-in user is this employee, update active session
+    if (currentUser?.employee?.id === employeeId) {
+      const updatedEmpObj = updatedEmployees.find((e) => e.id === employeeId);
+      if (updatedEmpObj) {
+        const updatedAuth = { ...currentUser, employee: updatedEmpObj };
+        setCurrentUser(updatedAuth);
+        setSelectedEmployee(updatedEmpObj);
+        localStorage.setItem('pulsehr_auth', JSON.stringify(updatedAuth));
+      }
+    }
 
     // Notify employee that they have returned to Bench
     addNotification({
@@ -420,6 +442,17 @@ export default function App() {
           targetEmployeeId: memId,
         });
       });
+
+      // If active session is one of the assigned employees, update session cache
+      if (assignedIds.includes(currentUser?.employee?.id)) {
+        const updatedEmpObj = updatedEmployees.find((e) => e.id === currentUser?.employee?.id);
+        if (updatedEmpObj) {
+          const updatedAuth = { ...currentUser, employee: updatedEmpObj };
+          setCurrentUser(updatedAuth);
+          setSelectedEmployee(updatedEmpObj);
+          localStorage.setItem('pulsehr_auth', JSON.stringify(updatedAuth));
+        }
+      }
     }
 
     setStats(computeStats(updatedEmployees, updatedProjects, leaves));
@@ -675,6 +708,12 @@ export default function App() {
 
   const isHR = currentUser.role === 'hr';
 
+  // Authoritative live employee object dynamically synced from live employees array
+  const activeEmpId = currentUser?.employee?.id || selectedEmployee?.id;
+  const liveEmployee = activeEmpId
+    ? (employees.find((e) => e.id === activeEmpId) || selectedEmployee || currentUser?.employee)
+    : (selectedEmployee || currentUser?.employee);
+
   return (
     <div className="flex min-h-screen bg-[#f4f5fa] text-slate-800 font-sans selection:bg-[#ff5c8a] selection:text-white">
       {/* Toast Alert */}
@@ -760,7 +799,7 @@ export default function App() {
           ) : (
             /* VIEW 2: EMPLOYEE SELF-SERVICE (Only rendered if Employee is logged in) */
             <EmployeePortal
-              employee={selectedEmployee || currentUser.employee}
+              employee={liveEmployee}
               leaves={leaves}
               projects={projects}
               activeSubTab={employeeTab}

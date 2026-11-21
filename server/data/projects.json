@@ -1,5 +1,22 @@
 [
   {
+    "id": "PROJ-247",
+    "name": "NextGen Cloud Payroll Platform",
+    "client": "NextGen Enterprise",
+    "status": "In Progress",
+    "lead": "Vikram Batra",
+    "startDate": "2026-11-21",
+    "deadline": "2026-12-31",
+    "requiredSkills": [
+      "React",
+      "Node.js",
+      "Cloud"
+    ],
+    "allocatedMembers": [],
+    "budget": "₹40,00,000",
+    "priority": "High"
+  },
+  {
     "id": "PROJ-201",
     "name": "BharatPay UPI & Banking Gateway",
     "client": "BharatPay Financial Technologies",
