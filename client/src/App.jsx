@@ -626,36 +626,42 @@ export default function App() {
     } catch {}
   };
 
-  // 6. UPDATE LEAVE STATUS HANDLER (Approve/Reject + Notify Employee)
+  // 6. UPDATE LEAVE STATUS HANDLER (Approve/Reject + Notify Employee + Firestore Sync)
   const handleUpdateLeaveStatus = async (leaveId, status) => {
     const targetLeave = leaves.find((l) => l.id === leaveId);
     const updatedLeaves = leaves.map((l) => (l.id === leaveId ? { ...l, status } : l));
     setLeaves(updatedLeaves);
     localStorage.setItem('pulsehr_leaves', JSON.stringify(updatedLeaves));
 
+    let updatedEmployees = [...employees];
     // If approved, decrement employee leave balance
-    if (status === 'Approved') {
-      if (targetLeave) {
-        const updatedEmployees = employees.map((emp) => {
-          if (emp.id === targetLeave.employeeId && emp.leaveBalance) {
-            const key = targetLeave.leaveType.toLowerCase().includes('sick')
-              ? 'sick'
-              : targetLeave.leaveType.toLowerCase().includes('casual')
-              ? 'casual'
-              : 'paid';
-            const currentBal = emp.leaveBalance[key] || 0;
-            return {
-              ...emp,
-              leaveBalance: {
-                ...emp.leaveBalance,
-                [key]: Math.max(0, currentBal - targetLeave.daysCount),
-              },
-            };
-          }
-          return emp;
-        });
-        setEmployees(updatedEmployees);
-        localStorage.setItem('pulsehr_employees', JSON.stringify(updatedEmployees));
+    if (status === 'Approved' && targetLeave) {
+      updatedEmployees = employees.map((emp) => {
+        if (emp.id === targetLeave.employeeId && emp.leaveBalance) {
+          const key = targetLeave.leaveType.toLowerCase().includes('sick')
+            ? 'sick'
+            : targetLeave.leaveType.toLowerCase().includes('casual')
+            ? 'casual'
+            : 'paid';
+          const currentBal = emp.leaveBalance[key] || 0;
+          return {
+            ...emp,
+            leaveBalance: {
+              ...emp.leaveBalance,
+              [key]: Math.max(0, currentBal - targetLeave.daysCount),
+            },
+          };
+        }
+        return emp;
+      });
+      setEmployees(updatedEmployees);
+      localStorage.setItem('pulsehr_employees', JSON.stringify(updatedEmployees));
+
+      const updatedEmp = updatedEmployees.find((e) => e.id === targetLeave.employeeId);
+      if (updatedEmp) {
+        try {
+          await syncEmployeeToFirestore(updatedEmp);
+        } catch {}
       }
     }
 
@@ -673,8 +679,15 @@ export default function App() {
       });
     }
 
+    // Persist to Google Cloud Firestore immediately
     const targetL = updatedLeaves.find((l) => l.id === leaveId);
-    if (targetL) syncLeaveToFirestore(targetL);
+    if (targetL) {
+      try {
+        await syncLeaveToFirestore(targetL);
+      } catch (err) {
+        console.warn('syncLeaveToFirestore error:', err);
+      }
+    }
 
     try {
       await fetch(`/api/leaves/${leaveId}/status`, {
@@ -683,6 +696,20 @@ export default function App() {
         body: JSON.stringify({ status }),
       });
     } catch {}
+  };
+
+  // 6B. DELETE LEAVE HANDLER
+  const handleDeleteLeave = async (leaveId) => {
+    const updatedLeaves = leaves.filter((l) => l.id !== leaveId);
+    setLeaves(updatedLeaves);
+    localStorage.setItem('pulsehr_leaves', JSON.stringify(updatedLeaves));
+    broadcastSync({ leaves: updatedLeaves });
+    showToast('Leave request removed.');
+    try {
+      await deleteLeaveFromFirestore(leaveId);
+    } catch (err) {
+      console.warn('deleteLeaveFromFirestore error:', err);
+    }
   };
 
   // 7. HR GRANTS / RECORDS LEAVE DIRECTLY
@@ -1110,6 +1137,7 @@ export default function App() {
                   employees={employees}
                   onUpdateLeaveStatus={handleUpdateLeaveStatus}
                   onCreateLeave={handleCreateLeave}
+                  onDeleteLeave={handleDeleteLeave}
                 />
               )}
             </div>

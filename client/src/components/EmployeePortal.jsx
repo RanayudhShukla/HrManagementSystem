@@ -146,7 +146,12 @@ export default function EmployeePortal({
     );
   }
 
-  const myLeaves = leaves.filter((l) => l.employeeId === employee.id);
+  const myLeaves = leaves.filter(
+    (l) =>
+      l &&
+      (l.employeeId === employee?.id ||
+        (employee?.name && l.employeeName?.toLowerCase() === employee.name.toLowerCase()))
+  );
 
   // Toggle Task Status (In Progress <-> Completed)
   const handleToggleTaskStatus = async (task) => {

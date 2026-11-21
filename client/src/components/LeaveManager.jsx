@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { CalendarCheck, Check, X, Clock, AlertCircle, FileText, Plus, UserCheck } from 'lucide-react';
+import { CalendarCheck, Check, X, Clock, AlertCircle, FileText, Plus, UserCheck, Trash2 } from 'lucide-react';
 
 export default function LeaveManager({
   leaves = [],
@@ -7,6 +7,7 @@ export default function LeaveManager({
   onDataChanged,
   onUpdateLeaveStatus,
   onCreateLeave,
+  onDeleteLeave,
 }) {
   const [filter, setFilter] = useState('All');
   const [actionLoading, setActionLoading] = useState(false);
@@ -172,30 +173,42 @@ export default function LeaveManager({
 
                   {/* Action buttons */}
                   <td className="py-3.5 px-4 text-right">
-                    {item.status === 'Pending' ? (
-                      <div className="flex items-center justify-end gap-2">
+                    <div className="flex items-center justify-end gap-2">
+                      {item.status === 'Pending' ? (
+                        <>
+                          <button
+                            onClick={() => handleUpdateStatus(item.id, 'Approved')}
+                            disabled={actionLoading}
+                            className="px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1 transition shadow-xs active:scale-95"
+                          >
+                            <Check className="w-3.5 h-3.5" />
+                            <span>Approve</span>
+                          </button>
+                          <button
+                            onClick={() => handleUpdateStatus(item.id, 'Rejected')}
+                            disabled={actionLoading}
+                            className="px-3 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-semibold flex items-center gap-1 transition active:scale-95"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                            <span>Reject</span>
+                          </button>
+                        </>
+                      ) : (
+                        <span className="text-[11px] text-slate-400 font-mono italic">
+                          Resolved
+                        </span>
+                      )}
+
+                      {onDeleteLeave && (
                         <button
-                          onClick={() => handleUpdateStatus(item.id, 'Approved')}
-                          disabled={actionLoading}
-                          className="px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1 transition shadow-xs"
+                          onClick={() => onDeleteLeave(item.id)}
+                          title="Delete leave record"
+                          className="p-1.5 rounded-lg hover:bg-rose-50 text-slate-400 hover:text-rose-600 transition"
                         >
-                          <Check className="w-3.5 h-3.5" />
-                          <span>Approve</span>
+                          <Trash2 className="w-3.5 h-3.5" />
                         </button>
-                        <button
-                          onClick={() => handleUpdateStatus(item.id, 'Rejected')}
-                          disabled={actionLoading}
-                          className="px-3 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-semibold flex items-center gap-1 transition"
-                        >
-                          <X className="w-3.5 h-3.5" />
-                          <span>Reject</span>
-                        </button>
-                      </div>
-                    ) : (
-                      <span className="text-[11px] text-slate-400 font-mono italic">
-                        Resolved
-                      </span>
-                    )}
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
