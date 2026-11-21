@@ -78,6 +78,8 @@ function computeStats(emps, projs, lvs) {
 export default function App() {
   const [currentUser, setCurrentUser] = useState(() => {
     try {
+      const session = sessionStorage.getItem('pulsehr_auth');
+      if (session) return JSON.parse(session);
       const saved = localStorage.getItem('pulsehr_auth');
       return saved ? JSON.parse(saved) : null;
     } catch {
@@ -211,6 +213,7 @@ export default function App() {
 
   const handleLogin = (user) => {
     setCurrentUser(user);
+    sessionStorage.setItem('pulsehr_auth', JSON.stringify(user));
     localStorage.setItem('pulsehr_auth', JSON.stringify(user));
 
     if (user.role === 'hr') {
@@ -224,6 +227,7 @@ export default function App() {
   const handleLogout = () => {
     setCurrentUser(null);
     setSelectedEmployee(null);
+    sessionStorage.removeItem('pulsehr_auth');
     localStorage.removeItem('pulsehr_auth');
     showToast('Signed out successfully.');
   };
@@ -662,7 +666,7 @@ export default function App() {
     showToast('Leave request submitted! HR has been notified.');
   };
 
-  // Quad-Layer Zero-Refresh Real-Time Sync Engine
+  // Dual-Layer Zero-Refresh Real-Time Sync Engine (Tabs & Windows)
   useEffect(() => {
     // Layer 1: Instant Cross-Tab/Window BroadcastChannel Listener
     const handleBroadcastMessage = (event) => {
@@ -695,94 +699,39 @@ export default function App() {
     };
     window.addEventListener('storage', handleStorageChange);
 
-    // Layer 3: Firestore Cloud Realtime Push Listeners
-    const unsubEmps = subscribeToFirestoreEmployees((cloudEmps) => {
-      if (cloudEmps && cloudEmps.length > 0) {
-        setEmployees(cloudEmps);
-        localStorage.setItem('pulsehr_employees', JSON.stringify(cloudEmps));
-      }
-    });
-
-    const unsubProjs = subscribeToFirestoreProjects((cloudProjs) => {
-      if (cloudProjs && cloudProjs.length > 0) {
-        setProjects(cloudProjs);
-        localStorage.setItem('pulsehr_projects', JSON.stringify(cloudProjs));
-      }
-    });
-
-    // Layer 4: Live Server Active Poller (Every 1500ms)
-    // Synchronizes across separate browsers, incognito windows, phones, and devices with zero reload
-    const pollServer = async () => {
+    // Layer 3: Heartbeat Local Cache Sync (every 1.5s)
+    // Synchronizes across active tabs without ever overwriting with old server files
+    const localHeartbeat = setInterval(() => {
       try {
-        const [empRes, projRes, leaveRes, notifRes] = await Promise.all([
-          fetch('/api/employees').then((r) => (r.ok ? r.json() : null)).catch(() => null),
-          fetch('/api/projects').then((r) => (r.ok ? r.json() : null)).catch(() => null),
-          fetch('/api/leaves').then((r) => (r.ok ? r.json() : null)).catch(() => null),
-          fetch('/api/notifications').then((r) => (r.ok ? r.json() : null)).catch(() => null),
-        ]);
-
-        if (empRes?.success && Array.isArray(empRes.data) && empRes.data.length > 0) {
-          setEmployees((prev) => {
-            const prevStr = JSON.stringify(prev);
-            const nextStr = JSON.stringify(empRes.data);
-            if (prevStr !== nextStr) {
-              localStorage.setItem('pulsehr_employees', nextStr);
-              return empRes.data;
-            }
-            return prev;
-          });
+        const storedEmps = localStorage.getItem('pulsehr_employees');
+        if (storedEmps) {
+          const parsed = JSON.parse(storedEmps);
+          setEmployees((prev) => (JSON.stringify(prev) !== storedEmps ? parsed : prev));
         }
-
-        if (projRes?.success && Array.isArray(projRes.data) && projRes.data.length > 0) {
-          setProjects((prev) => {
-            const prevStr = JSON.stringify(prev);
-            const nextStr = JSON.stringify(projRes.data);
-            if (prevStr !== nextStr) {
-              localStorage.setItem('pulsehr_projects', nextStr);
-              return projRes.data;
-            }
-            return prev;
-          });
+        const storedProjs = localStorage.getItem('pulsehr_projects');
+        if (storedProjs) {
+          const parsed = JSON.parse(storedProjs);
+          setProjects((prev) => (JSON.stringify(prev) !== storedProjs ? parsed : prev));
         }
-
-        if (leaveRes?.success && Array.isArray(leaveRes.data) && leaveRes.data.length > 0) {
-          setLeaves((prev) => {
-            const prevStr = JSON.stringify(prev);
-            const nextStr = JSON.stringify(leaveRes.data);
-            if (prevStr !== nextStr) {
-              localStorage.setItem('pulsehr_leaves', nextStr);
-              return leaveRes.data;
-            }
-            return prev;
-          });
+        const storedLeaves = localStorage.getItem('pulsehr_leaves');
+        if (storedLeaves) {
+          const parsed = JSON.parse(storedLeaves);
+          setLeaves((prev) => (JSON.stringify(prev) !== storedLeaves ? parsed : prev));
         }
-
-        if (notifRes?.success && Array.isArray(notifRes.data)) {
-          setNotifications((prev) => {
-            const prevStr = JSON.stringify(prev);
-            const nextStr = JSON.stringify(notifRes.data);
-            if (prevStr !== nextStr) {
-              localStorage.setItem('cooperate_notifications', nextStr);
-              return notifRes.data;
-            }
-            return prev;
-          });
+        const storedNotifs = localStorage.getItem('cooperate_notifications');
+        if (storedNotifs) {
+          const parsed = JSON.parse(storedNotifs);
+          setNotifications((prev) => (JSON.stringify(prev) !== storedNotifs ? parsed : prev));
         }
       } catch {}
-    };
-
-    // Initial immediate fetch
-    pollServer();
-    const syncInterval = setInterval(pollServer, 1500);
+    }, 1500);
 
     return () => {
       if (broadcastChannel) {
         broadcastChannel.removeEventListener('message', handleBroadcastMessage);
       }
       window.removeEventListener('storage', handleStorageChange);
-      if (typeof unsubEmps === 'function') unsubEmps();
-      if (typeof unsubProjs === 'function') unsubProjs();
-      clearInterval(syncInterval);
+      clearInterval(localHeartbeat);
     };
   }, []);
 
