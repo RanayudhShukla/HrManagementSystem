@@ -14,21 +14,8 @@ export default function LoginPage({ onLogin, employees = [] }) {
   const handleRoleChange = (newRole) => {
     setRole(newRole);
     setError('');
-    if (newRole === 'hr') {
-      setEmail('admin@cooperatehrms.com');
-      setPassword('admin123');
-    } else {
-      const firstEmp = employees[0];
-      setEmail(firstEmp ? firstEmp.email : 'aarav.sharma@cooperate.com');
-      setPassword(firstEmp?.defaultPassword || 'Welcome@2026');
-    }
-  };
-
-  const handleFillDemo = (demoEmail, demoPass, demoRole) => {
-    setRole(demoRole);
-    setEmail(demoEmail);
-    setPassword(demoPass);
-    setError('');
+    setEmail('');
+    setPassword('');
   };
 
   const handleSubmit = (e) => {
@@ -254,36 +241,6 @@ export default function LoginPage({ onLogin, employees = [] }) {
                 <ArrowRight className="w-4 h-4" />
               </button>
             </form>
-
-            {/* Quick Demo Credentials Bar */}
-            <div className="mt-6 pt-4 border-t border-slate-100">
-              <span className="text-[10px] uppercase font-bold text-slate-400 block mb-2 tracking-wider">
-                1-Click Industrial Demo Accounts:
-              </span>
-              <div className="flex flex-wrap gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => handleFillDemo('admin@cooperatehrms.com', 'admin123', 'hr')}
-                  className="px-2.5 py-1 rounded-lg bg-purple-50 hover:bg-purple-100 text-[#452473] font-bold text-[10px] border border-purple-200 transition"
-                >
-                  👑 HR Admin
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleFillDemo('EMP-1001', 'Welcome@2026', 'employee')}
-                  className="px-2.5 py-1 rounded-lg bg-pink-50 hover:bg-pink-100 text-[#ff5c8a] font-bold text-[10px] border border-pink-200 transition"
-                >
-                  💻 EMP-1001 (Aarav)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleFillDemo('EMP-1002', 'Welcome@2026', 'employee')}
-                  className="px-2.5 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-[10px] border border-blue-200 transition"
-                >
-                  🎨 EMP-1002 (Elena)
-                </button>
-              </div>
-            </div>
           </div>
         </div>
       </div>

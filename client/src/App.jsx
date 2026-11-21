@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import DashboardOverview from './components/DashboardOverview';
@@ -15,6 +15,28 @@ import {
   syncLeaveToFirestore, syncTaskToFirestore,
   getFirestoreEmployees, getFirestoreProjects, getFirestoreLeaves 
 } from './firebase/firestoreService';
+
+// Cross-tab / cross-window BroadcastChannel for instant real-time zero-refresh synchronization
+let broadcastChannel = null;
+try {
+  if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+    broadcastChannel = new BroadcastChannel('cooperate_hrms_live_sync');
+  }
+} catch (e) {
+  console.warn('BroadcastChannel initialization notice:', e);
+}
+
+const broadcastSync = (payload) => {
+  try {
+    if (broadcastChannel) {
+      broadcastChannel.postMessage({
+        type: 'COOPERATE_HRMS_SYNC',
+        timestamp: Date.now(),
+        ...payload,
+      });
+    }
+  } catch {}
+};
 
 function computeStats(emps, projs, lvs) {
   const totalHeadcount = emps.length;
@@ -100,11 +122,8 @@ export default function App() {
     }
   });
 
-  const [stats, setStats] = useState(() => computeStats(
-    employees.length ? employees : SEED_EMPLOYEES,
-    projects.length ? projects : SEED_PROJECTS,
-    leaves.length ? leaves : SEED_LEAVES
-  ));
+  const stats = useMemo(() => computeStats(employees, projects, leaves), [employees, projects, leaves]);
+  const setStats = () => {}; // Reactive useMemo auto-recalculates stats on any state change
   
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -138,6 +157,7 @@ export default function App() {
         ...prev,
       ];
       localStorage.setItem('cooperate_notifications', JSON.stringify(updated));
+      broadcastSync({ notifications: updated });
       return updated;
     });
   };
@@ -235,7 +255,7 @@ export default function App() {
     setProjects(updatedProjects);
     localStorage.setItem('pulsehr_employees', JSON.stringify(updatedEmployees));
     localStorage.setItem('pulsehr_projects', JSON.stringify(updatedProjects));
-    setStats(computeStats(updatedEmployees, updatedProjects, leaves));
+    broadcastSync({ employees: updatedEmployees, projects: updatedProjects });
     showToast(`${emp.name} allocated to ${proj.name} at ${pct}% capacity!`);
 
     // If the currently active session is this employee, update session cache immediately
@@ -303,7 +323,7 @@ export default function App() {
     setProjects(updatedProjects);
     localStorage.setItem('pulsehr_employees', JSON.stringify(updatedEmployees));
     localStorage.setItem('pulsehr_projects', JSON.stringify(updatedProjects));
-    setStats(computeStats(updatedEmployees, updatedProjects, leaves));
+    broadcastSync({ employees: updatedEmployees, projects: updatedProjects });
     showToast(`${emp.name} released and returned to Bench.`);
 
     // If currently logged-in user is this employee, update active session
@@ -363,7 +383,7 @@ export default function App() {
     const updatedEmployees = [createdEmp, ...employees];
     setEmployees(updatedEmployees);
     localStorage.setItem('pulsehr_employees', JSON.stringify(updatedEmployees));
-    setStats(computeStats(updatedEmployees, projects, leaves));
+    broadcastSync({ employees: updatedEmployees });
     showToast(`New employee ${createdEmp.name} (${createdEmp.id}) onboarded!`);
 
     addNotification({
@@ -388,7 +408,7 @@ export default function App() {
     const updatedEmployees = employees.filter((e) => e.id !== employeeId);
     setEmployees(updatedEmployees);
     localStorage.setItem('pulsehr_employees', JSON.stringify(updatedEmployees));
-    setStats(computeStats(updatedEmployees, projects, leaves));
+    broadcastSync({ employees: updatedEmployees });
     showToast('Employee offboarded from company directory.');
 
     try {
@@ -455,7 +475,7 @@ export default function App() {
       }
     }
 
-    setStats(computeStats(updatedEmployees, updatedProjects, leaves));
+    broadcastSync({ employees: updatedEmployees, projects: updatedProjects });
     showToast(`Project "${createdProj.name}" created with ${assignedIds.length} team member(s)!`);
 
     syncProjectToFirestore(createdProj);
@@ -501,7 +521,7 @@ export default function App() {
       }
     }
 
-    setStats(computeStats(employees, projects, updatedLeaves));
+    broadcastSync({ employees: updatedEmployees, leaves: updatedLeaves });
     showToast(`Leave request marked as ${status}!`);
 
     // Notify employee of approval/rejection decision
@@ -572,7 +592,7 @@ export default function App() {
       localStorage.setItem('pulsehr_employees', JSON.stringify(updatedEmployees));
     }
 
-    setStats(computeStats(updatedEmployees, projects, updatedLeaves));
+    broadcastSync({ employees: updatedEmployees, leaves: updatedLeaves });
     showToast(`Leave recorded for ${createdLeave.employeeName} (${createdLeave.status})!`);
 
     addNotification({
@@ -622,7 +642,7 @@ export default function App() {
     const updatedLeaves = [newLeaveEntry, ...leaves];
     setLeaves(updatedLeaves);
     localStorage.setItem('pulsehr_leaves', JSON.stringify(updatedLeaves));
-    setStats(computeStats(employees, projects, updatedLeaves));
+    broadcastSync({ leaves: updatedLeaves });
 
     addNotification({
       title: 'New Leave Request Filed',
@@ -635,9 +655,23 @@ export default function App() {
     showToast('Leave request submitted! HR has been notified.');
   };
 
-  // Background Cloud Sync & Multi-Tab Realtime Storage Listener
+  // Triple-Layer Zero-Refresh Real-Time Sync Engine
   useEffect(() => {
-    // Cross-tab real-time event listener
+    // Layer 1: Instant Cross-Tab/Window BroadcastChannel Listener
+    const handleBroadcastMessage = (event) => {
+      if (!event.data || event.data.type !== 'COOPERATE_HRMS_SYNC') return;
+      const { employees: newEmps, projects: newProjs, leaves: newLeaves, notifications: newNotifs } = event.data;
+      if (newEmps) setEmployees(newEmps);
+      if (newProjs) setProjects(newProjs);
+      if (newLeaves) setLeaves(newLeaves);
+      if (newNotifs) setNotifications(newNotifs);
+    };
+
+    if (broadcastChannel) {
+      broadcastChannel.addEventListener('message', handleBroadcastMessage);
+    }
+
+    // Layer 2: Native Cross-Tab Storage Event Listener
     const handleStorageChange = (e) => {
       if (e.key === 'pulsehr_leaves' && e.newValue) {
         try { setLeaves(JSON.parse(e.newValue)); } catch {}
@@ -653,6 +687,33 @@ export default function App() {
       }
     };
     window.addEventListener('storage', handleStorageChange);
+
+    // Layer 3: High-Frequency Silent Heartbeat Poller (Every 1.5s)
+    // Guarantees zero-refresh updates even if tabs are backgrounded or across different browser windows
+    const syncInterval = setInterval(() => {
+      try {
+        const storedEmps = localStorage.getItem('pulsehr_employees');
+        if (storedEmps) {
+          const parsed = JSON.parse(storedEmps);
+          setEmployees((prev) => (JSON.stringify(prev) !== storedEmps ? parsed : prev));
+        }
+        const storedProjs = localStorage.getItem('pulsehr_projects');
+        if (storedProjs) {
+          const parsed = JSON.parse(storedProjs);
+          setProjects((prev) => (JSON.stringify(prev) !== storedProjs ? parsed : prev));
+        }
+        const storedLeaves = localStorage.getItem('pulsehr_leaves');
+        if (storedLeaves) {
+          const parsed = JSON.parse(storedLeaves);
+          setLeaves((prev) => (JSON.stringify(prev) !== storedLeaves ? parsed : prev));
+        }
+        const storedNotifs = localStorage.getItem('cooperate_notifications');
+        if (storedNotifs) {
+          const parsed = JSON.parse(storedNotifs);
+          setNotifications((prev) => (JSON.stringify(prev) !== storedNotifs ? parsed : prev));
+        }
+      } catch {}
+    }, 1500);
 
     const syncCloudData = async () => {
       try {
@@ -680,7 +741,13 @@ export default function App() {
     };
     syncCloudData();
 
-    return () => window.removeEventListener('storage', handleStorageChange);
+    return () => {
+      if (broadcastChannel) {
+        broadcastChannel.removeEventListener('message', handleBroadcastMessage);
+      }
+      window.removeEventListener('storage', handleStorageChange);
+      clearInterval(syncInterval);
+    };
   }, []);
 
   // Filter employees for search query
