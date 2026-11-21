@@ -96,34 +96,36 @@ app.get('/api/employees/:id', async (req, res) => {
 // POST /api/employees (HR Onboards a New Employee)
 app.post('/api/employees', async (req, res) => {
   try {
-    const { name, email, phone, department, role, salary, skills, workMode } = req.body;
+    const { id, name, email, phone, department, role, salary, skills, workMode, defaultPassword, password } = req.body;
     if (!name || !email || !department || !role) {
       return res.status(400).json({ success: false, message: 'Missing required onboarding fields' });
     }
 
     const employees = await readData(EMPLOYEES_FILE);
-    const employeeId = `EMP-${Math.floor(1000 + Math.random() * 9000)}`;
+    const employeeId = id?.trim() || `EMP-${Math.floor(1000 + Math.random() * 9000)}`;
 
     const newEmployee = {
       id: employeeId,
       name,
       email,
-      phone: phone || '+1 555-000-1122',
+      phone: phone || '+91 98765 43210',
       department,
       role,
       type: 'Full-Time',
       status: 'Active',
       joiningDate: new Date().toISOString().split('T')[0],
-      salary: salary || '$80,000',
+      salary: salary || '₹14,50,000 / yr',
       skills: Array.isArray(skills)
         ? skills
         : (skills ? skills.split(',').map((s) => s.trim()) : ['General']),
-      workMode: workMode || 'Hybrid',
+      workMode: workMode || 'Hybrid (Bengaluru HQ)',
       allocationStatus: 'Available (Bench)',
       allocationPercent: 0,
       assignedProjectId: null,
       assignedProjectName: 'Unassigned (Available for new project)',
       leaveBalance: { paid: 18, sick: 8, casual: 5 },
+      defaultPassword: defaultPassword || password || 'Welcome@2026',
+      password: defaultPassword || password || 'Welcome@2026',
     };
 
     employees.unshift(newEmployee);

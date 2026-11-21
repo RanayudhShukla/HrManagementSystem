@@ -1,21 +1,34 @@
 import React, { useState } from 'react';
 import { 
-  Building2, ShieldCheck, User, Lock, Mail, ArrowRight, 
-  CheckCircle2, AlertCircle 
+  Building2, ShieldCheck, Mail, Lock, ArrowRight, 
+  CheckCircle2, Sparkles, AlertCircle, Key, UserCheck 
 } from 'lucide-react';
 
-export default function LoginPage({ onLogin, employees }) {
+export default function LoginPage({ onLogin, employees = [] }) {
   const [role, setRole] = useState('hr'); // 'hr' | 'employee'
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [email, setEmail] = useState('admin@cooperatehrms.com');
+  const [password, setPassword] = useState('admin123');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleRoleChange = (newRole) => {
     setRole(newRole);
     setError('');
-    setEmail('');
-    setPassword('');
+    if (newRole === 'hr') {
+      setEmail('admin@cooperatehrms.com');
+      setPassword('admin123');
+    } else {
+      const firstEmp = employees[0];
+      setEmail(firstEmp ? firstEmp.email : 'aarav.sharma@cooperate.com');
+      setPassword(firstEmp?.defaultPassword || 'Welcome@2026');
+    }
+  };
+
+  const handleFillDemo = (demoEmail, demoPass, demoRole) => {
+    setRole(demoRole);
+    setEmail(demoEmail);
+    setPassword(demoPass);
+    setError('');
   };
 
   const handleSubmit = (e) => {
@@ -23,11 +36,11 @@ export default function LoginPage({ onLogin, employees }) {
     setError('');
     setLoading(true);
 
-    const cleanEmail = email.trim().toLowerCase();
+    const cleanInput = email.trim().toLowerCase();
     const cleanPass = password.trim();
 
-    if (!cleanEmail || !cleanPass) {
-      setError('Please enter both email and password.');
+    if (!cleanInput || !cleanPass) {
+      setError('Please enter both identity (email or ID) and password.');
       setLoading(false);
       return;
     }
@@ -35,16 +48,16 @@ export default function LoginPage({ onLogin, employees }) {
     if (role === 'hr') {
       // HR Admin verification
       if (
-        cleanEmail === 'admin@cooperatehrms.com' ||
-        cleanEmail === 'admin@cooperate.com' ||
-        cleanEmail === 'admin@pulsehr.com' ||
-        cleanEmail.includes('admin') ||
-        cleanEmail.includes('hr')
+        cleanInput === 'admin@cooperatehrms.com' ||
+        cleanInput === 'admin@cooperate.com' ||
+        cleanInput === 'admin@pulsehr.com' ||
+        cleanInput.includes('admin') ||
+        cleanInput.includes('hr')
       ) {
         onLogin({
           role: 'hr',
           name: 'Dylan Hunter',
-          email: cleanEmail,
+          email: cleanInput,
           title: 'HR Operations Lead',
         });
       } else {
@@ -52,14 +65,33 @@ export default function LoginPage({ onLogin, employees }) {
         setLoading(false);
       }
     } else {
-      // Employee verification directly from employees database
-      const matchedEmployee = employees.find(
-        (emp) =>
-          emp.email.toLowerCase() === cleanEmail ||
-          emp.email.toLowerCase().split('@')[0] === cleanEmail.split('@')[0]
-      );
+      // Employee verification by either Work Email OR Employee ID
+      const matchedEmployee = employees.find((emp) => {
+        const empId = (emp.id || '').toLowerCase();
+        const empMail = (emp.email || '').toLowerCase();
+        const empUsername = empMail.split('@')[0];
+        return cleanInput === empId || cleanInput === empMail || cleanInput === empUsername;
+      });
 
       if (matchedEmployee) {
+        const expected = matchedEmployee.defaultPassword || matchedEmployee.password || 'Welcome@2026';
+        const firstName = matchedEmployee.name ? matchedEmployee.name.split(' ')[0].toLowerCase() : '';
+        
+        // Accept configured password, defaultPassword, or standard dev passwords
+        const isValidPassword =
+          cleanPass === expected ||
+          cleanPass === 'Welcome@2026' ||
+          cleanPass === 'admin123' ||
+          cleanPass === 'password' ||
+          cleanPass.toLowerCase() === `${firstName}123` ||
+          (firstName && cleanPass.toLowerCase().includes(firstName));
+
+        if (!isValidPassword) {
+          setError(`Invalid password for ${matchedEmployee.name} (${matchedEmployee.id}). Expected default password: "${expected}".`);
+          setLoading(false);
+          return;
+        }
+
         onLogin({
           role: 'employee',
           employee: matchedEmployee,
@@ -68,7 +100,7 @@ export default function LoginPage({ onLogin, employees }) {
           title: matchedEmployee.role,
         });
       } else {
-        setError(`No active employee account found for "${email}". Check your work email and try again.`);
+        setError(`No active employee found for "${email}". You can enter either your Corporate Email or Employee ID (e.g. EMP-1001).`);
         setLoading(false);
       }
     }
@@ -110,39 +142,34 @@ export default function LoginPage({ onLogin, employees }) {
             </div>
           </div>
 
-          {/* Feature Highlights List */}
-          <div className="relative z-10 my-8 space-y-2.5 text-xs text-purple-100/90 border-y border-white/10 py-6">
+          {/* Bottom Features checklist */}
+          <div className="relative z-10 pt-8 border-t border-white/10 space-y-2.5 text-xs text-purple-200/90 font-medium">
             <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-[#ff5c8a]" />
-              <span>Real-time Bench & Project Staffing</span>
+              <CheckCircle2 className="w-4 h-4 text-[#ff5c8a] shrink-0" />
+              <span>Real-Time Resource Allocation & Staffing Matrix</span>
             </div>
             <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-[#72c2ff]" />
-              <span>Time-Off Approvals & Leave Balance Sync</span>
+              <CheckCircle2 className="w-4 h-4 text-[#ff5c8a] shrink-0" />
+              <span>Role-Based Two-Way Notification Engine</span>
             </div>
             <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-              <span>Role-Based Secure Credentials Verification</span>
+              <CheckCircle2 className="w-4 h-4 text-[#ff5c8a] shrink-0" />
+              <span>Direct Employee Provisioning & Credentials</span>
             </div>
-          </div>
-
-          {/* Bottom Copyright */}
-          <div className="relative z-10 text-[11px] text-purple-200/60 font-mono">
-            © 2026 Co-Operate HRMS Suite. All rights reserved.
           </div>
         </div>
 
         {/* RIGHT LOGIN FORM PANEL */}
-        <div className="p-8 sm:p-12 flex flex-col justify-center">
+        <div className="p-8 sm:p-12 flex flex-col justify-between bg-white">
           <div>
-            {/* Role Switcher Tabs */}
-            <div className="flex items-center justify-between mb-8">
+            {/* Role Toggle Selector */}
+            <div className="flex items-center justify-between pb-4 mb-6 border-b border-slate-100">
               <div>
-                <h3 className="text-xl font-black text-slate-900">Sign In</h3>
-                <p className="text-xs text-slate-500 mt-0.5">Enter your work credentials</p>
+                <h3 className="text-lg font-bold text-slate-900">Sign In</h3>
+                <p className="text-xs text-slate-500">Select your authorization portal</p>
               </div>
 
-              <div className="flex p-1 rounded-xl bg-[#f4f5fa] border border-slate-200 text-xs">
+              <div className="flex items-center bg-[#f4f5fa] p-1 rounded-xl border border-slate-200/80 text-xs font-semibold">
                 <button
                   type="button"
                   onClick={() => handleRoleChange('hr')}
@@ -180,17 +207,21 @@ export default function LoginPage({ onLogin, employees }) {
             <form onSubmit={handleSubmit} className="space-y-4 text-xs">
               <div>
                 <label className="block text-slate-600 font-bold mb-1">
-                  {role === 'hr' ? 'HR Corporate Email' : 'Work Email Address'}
+                  {role === 'hr' ? 'HR Corporate Email' : 'Work Email Address or Employee ID'}
                 </label>
                 <div className="relative">
                   <Mail className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                   <input
-                    type="email"
+                    type="text"
                     required
-                    placeholder={role === 'hr' ? 'admin@cooperatehrms.com' : 'e.g. aarav.sharma@cooperate.com'}
+                    placeholder={
+                      role === 'hr'
+                        ? 'admin@cooperatehrms.com'
+                        : 'e.g. EMP-1001 or aarav.sharma@cooperate.com'
+                    }
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full bg-[#f8f9fc] border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#452473]/20"
+                    className="w-full bg-[#f8f9fc] border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#452473]/20 font-medium"
                   />
                 </div>
               </div>
@@ -202,10 +233,10 @@ export default function LoginPage({ onLogin, employees }) {
                   <input
                     type="password"
                     required
-                    placeholder="Enter password"
+                    placeholder="Enter login password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full bg-[#f8f9fc] border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#452473]/20"
+                    className="w-full bg-[#f8f9fc] border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#452473]/20 font-mono"
                   />
                 </div>
               </div>
@@ -223,6 +254,36 @@ export default function LoginPage({ onLogin, employees }) {
                 <ArrowRight className="w-4 h-4" />
               </button>
             </form>
+
+            {/* Quick Demo Credentials Bar */}
+            <div className="mt-6 pt-4 border-t border-slate-100">
+              <span className="text-[10px] uppercase font-bold text-slate-400 block mb-2 tracking-wider">
+                1-Click Industrial Demo Accounts:
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => handleFillDemo('admin@cooperatehrms.com', 'admin123', 'hr')}
+                  className="px-2.5 py-1 rounded-lg bg-purple-50 hover:bg-purple-100 text-[#452473] font-bold text-[10px] border border-purple-200 transition"
+                >
+                  👑 HR Admin
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleFillDemo('EMP-1001', 'Welcome@2026', 'employee')}
+                  className="px-2.5 py-1 rounded-lg bg-pink-50 hover:bg-pink-100 text-[#ff5c8a] font-bold text-[10px] border border-pink-200 transition"
+                >
+                  💻 EMP-1001 (Aarav)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleFillDemo('EMP-1002', 'Welcome@2026', 'employee')}
+                  className="px-2.5 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-[10px] border border-blue-200 transition"
+                >
+                  🎨 EMP-1002 (Elena)
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>

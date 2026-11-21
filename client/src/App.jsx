@@ -318,10 +318,10 @@ export default function App() {
     } catch {}
   };
 
-  // 3. CREATE EMPLOYEE HANDLER
+  // 3. CREATE EMPLOYEE HANDLER (With Custom ID & Credentials Provisioning)
   const handleCreateEmployee = async (newEmp) => {
     const createdEmp = {
-      id: `EMP-${Math.floor(1000 + Math.random() * 9000)}`,
+      id: newEmp.id?.trim() || `EMP-${Math.floor(1000 + Math.random() * 9000)}`,
       status: 'Active',
       type: 'Full-Time',
       joiningDate: new Date().toISOString().split('T')[0],
@@ -330,6 +330,8 @@ export default function App() {
       assignedProjectId: null,
       assignedProjectName: 'Unassigned (Available for new project)',
       leaveBalance: { paid: 18, sick: 8, casual: 5 },
+      defaultPassword: newEmp.defaultPassword || newEmp.password || 'Welcome@2026',
+      password: newEmp.defaultPassword || newEmp.password || 'Welcome@2026',
       ...newEmp,
       skills: Array.isArray(newEmp.skills)
         ? newEmp.skills
@@ -340,7 +342,14 @@ export default function App() {
     setEmployees(updatedEmployees);
     localStorage.setItem('pulsehr_employees', JSON.stringify(updatedEmployees));
     setStats(computeStats(updatedEmployees, projects, leaves));
-    showToast(`New employee ${createdEmp.name} onboarded!`);
+    showToast(`New employee ${createdEmp.name} (${createdEmp.id}) onboarded!`);
+
+    addNotification({
+      title: 'Employee Onboarded',
+      message: `${createdEmp.name} was onboarded to ${createdEmp.department} with credentials ID: ${createdEmp.id}.`,
+      type: 'system',
+      targetRole: 'hr',
+    });
 
     syncEmployeeToFirestore(createdEmp);
     try {
