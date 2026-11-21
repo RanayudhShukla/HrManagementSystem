@@ -1,5 +1,5 @@
 import { initializeApp, getApps } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
+import { getFirestore, initializeFirestore } from 'firebase/firestore';
 
 // Your Official Firebase Project Configuration
 export const DEFAULT_FIREBASE_CONFIG = {
@@ -31,12 +31,25 @@ export function getStoredFirebaseConfig() {
   }
 }
 
-// Initialize Firebase App
+// Initialize Firebase App with resilient long-polling fallback for cloud environments & Vercel
 export function initFirebase() {
   const config = getStoredFirebaseConfig();
   const apps = getApps();
   const app = apps.length > 0 ? apps[0] : initializeApp(config);
-  const db = getFirestore(app);
+
+  let db;
+  try {
+    db = initializeFirestore(app, {
+      experimentalAutoDetectLongPolling: true,
+    });
+  } catch {
+    try {
+      db = getFirestore(app);
+    } catch (e) {
+      console.warn('Firestore initialization fallback error:', e);
+    }
+  }
+
   return { app, db, config };
 }
 

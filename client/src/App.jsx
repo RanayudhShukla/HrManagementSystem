@@ -467,7 +467,9 @@ export default function App() {
       targetRole: 'hr',
     });
 
-    syncEmployeeToFirestore(createdEmp);
+    try {
+      await syncEmployeeToFirestore(createdEmp);
+    } catch {}
     try {
       await fetch('/api/employees', {
         method: 'POST',
@@ -795,7 +797,7 @@ export default function App() {
 
         // Realtime listener for employees in Firestore
         unsubEmps = subscribeToFirestoreEmployees((cloudEmps) => {
-          if (Array.isArray(cloudEmps)) {
+          if (Array.isArray(cloudEmps) && cloudEmps.length > 0) {
             const validEmps = cloudEmps
               .filter((e) => !DEMO_EMPLOYEE_IDS.has(e.id) && !DEMO_NAMES.has(e.name))
               .map((e) => ({
@@ -809,8 +811,10 @@ export default function App() {
                   : ['General'],
                 leaveBalance: e.leaveBalance || { paid: 18, sick: 8, casual: 5 },
               }));
-            setEmployees(validEmps);
-            localStorage.setItem('pulsehr_employees', JSON.stringify(validEmps));
+            if (validEmps.length > 0) {
+              setEmployees(validEmps);
+              localStorage.setItem('pulsehr_employees', JSON.stringify(validEmps));
+            }
           }
         });
 
