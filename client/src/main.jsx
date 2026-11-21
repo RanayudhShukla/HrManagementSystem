@@ -21,6 +21,21 @@ class ErrorBoundary extends React.Component {
     try {
       sessionStorage.clear();
       localStorage.removeItem('pulsehr_auth');
+      const saved = localStorage.getItem('pulsehr_employees');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        const cleaned = (Array.isArray(parsed) ? parsed : [])
+          .filter((e) => !['EMP-1001', 'EMP-1002', 'EMP-1003', 'EMP-1004', 'EMP-1005', 'EMP-1006', 'EMP-1007', 'EMP-1008'].includes(e.id) && !['Aarav Sharma', 'Elena Rostova', 'Marcus Vance', 'Kavita Verma', 'David Chen', 'Sarah Miller', 'Vikram Malhotra', 'Vikram Batra'].includes(e.name))
+          .map((e) => ({
+            ...e,
+            skills: Array.isArray(e.skills)
+              ? e.skills
+              : typeof e.skills === 'string'
+              ? e.skills.split(',').map((s) => s.trim()).filter(Boolean)
+              : ['General'],
+          }));
+        localStorage.setItem('pulsehr_employees', JSON.stringify(cleaned));
+      }
     } catch {}
     window.location.reload();
   };

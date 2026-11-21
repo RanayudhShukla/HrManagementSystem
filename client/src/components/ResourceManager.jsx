@@ -20,18 +20,26 @@ export default function ResourceManager({
   const [allocatingLoading, setAllocatingLoading] = useState(false);
   const [error, setError] = useState('');
 
+  const getEmpSkills = (emp) => {
+    if (Array.isArray(emp?.skills)) return emp.skills;
+    if (typeof emp?.skills === 'string') return emp.skills.split(',').map((s) => s.trim()).filter(Boolean);
+    return [];
+  };
+
   const allSkills = Array.from(
-    new Set(employees.flatMap((e) => e.skills || []))
+    new Set(employees.flatMap((e) => getEmpSkills(e)))
   ).slice(0, 8);
 
   const filteredEmployees = employees.filter((emp) => {
+    const status = (emp.allocationStatus || 'Available (Bench)').toLowerCase();
     const matchesAllocation =
       allocationFilter === 'All' ||
-      emp.allocationStatus.toLowerCase() === allocationFilter.toLowerCase();
+      status === allocationFilter.toLowerCase();
 
+    const empSkills = getEmpSkills(emp);
     const matchesSkill =
       !skillFilter ||
-      emp.skills.some((sk) => sk.toLowerCase().includes(skillFilter.toLowerCase()));
+      empSkills.some((sk) => sk.toLowerCase().includes(skillFilter.toLowerCase()));
 
     return matchesAllocation && matchesSkill;
   });
@@ -283,7 +291,7 @@ export default function ResourceManager({
 
                 {/* Skills Cloud */}
                 <div className="mt-3 flex flex-wrap gap-1.5">
-                  {emp.skills.map((skill, idx) => (
+                  {getEmpSkills(emp).map((skill, idx) => (
                     <span
                       key={idx}
                       className="px-2 py-0.5 rounded text-[10px] bg-slate-100 text-slate-600 border border-slate-200 font-mono"

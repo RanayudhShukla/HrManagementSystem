@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { 
   Users, Plus, Trash2, Mail, Phone, Calendar, DollarSign, 
-  X, Lock, Key, Copy, Check, Eye, EyeOff, ShieldCheck, Search, Filter 
+  X, Lock, Key, Copy, Check, Eye, EyeOff, ShieldCheck, Search, Filter, UserPlus 
 } from 'lucide-react';
 
 export default function WorkforceDirectory({
@@ -70,8 +70,19 @@ export default function WorkforceDirectory({
 
   const handleCreateEmployee = async (e) => {
     e.preventDefault();
+    const cleanSkills = Array.isArray(newEmp.skills)
+      ? newEmp.skills
+      : typeof newEmp.skills === 'string'
+      ? newEmp.skills.split(',').map((s) => s.trim()).filter(Boolean)
+      : ['General'];
+
+    const payload = {
+      ...newEmp,
+      skills: cleanSkills,
+    };
+
     if (onCreateEmployee) {
-      onCreateEmployee(newEmp);
+      onCreateEmployee(payload);
       setShowAddModal(false);
       return;
     }
@@ -81,7 +92,7 @@ export default function WorkforceDirectory({
       const res = await fetch('/api/employees', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newEmp),
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json();
@@ -122,12 +133,18 @@ export default function WorkforceDirectory({
   const filteredEmployees = employees.filter((emp) => {
     const matchesDept = departmentFilter === 'All' || emp.department === departmentFilter;
     const q = search.toLowerCase().trim();
+    const empSkills = Array.isArray(emp?.skills)
+      ? emp.skills
+      : typeof emp?.skills === 'string'
+      ? emp.skills.split(',').map((s) => s.trim()).filter(Boolean)
+      : [];
+
     const matchesSearch = !q || (
-      emp.name.toLowerCase().includes(q) ||
-      emp.id.toLowerCase().includes(q) ||
-      emp.email.toLowerCase().includes(q) ||
-      emp.role.toLowerCase().includes(q) ||
-      (emp.skills || []).some((sk) => sk.toLowerCase().includes(q))
+      (emp.name || '').toLowerCase().includes(q) ||
+      (emp.id || '').toLowerCase().includes(q) ||
+      (emp.email || '').toLowerCase().includes(q) ||
+      (emp.role || '').toLowerCase().includes(q) ||
+      empSkills.some((sk) => sk.toLowerCase().includes(q))
     );
     return matchesDept && matchesSearch;
   });

@@ -40,21 +40,31 @@ const broadcastSync = (payload) => {
 };
 
 function computeStats(emps, projs, lvs) {
-  const totalHeadcount = emps.length;
-  const benchCount = emps.filter((e) => e.allocationStatus === 'Available (Bench)').length;
-  const partiallyAllocated = emps.filter((e) => e.allocationStatus === 'Partially Available').length;
-  const fullyAllocated = emps.filter((e) => e.allocationStatus === 'Fully Booked').length;
+  const safeEmps = Array.isArray(emps) ? emps : [];
+  const safeProjs = Array.isArray(projs) ? projs : [];
+  const safeLvs = Array.isArray(lvs) ? lvs : [];
+
+  const totalHeadcount = safeEmps.length;
+  const benchCount = safeEmps.filter((e) => (e.allocationStatus || 'Available (Bench)').toLowerCase().includes('bench') || (e.allocationPercent || 0) === 0).length;
+  const partiallyAllocated = safeEmps.filter((e) => (e.allocationPercent || 0) > 0 && (e.allocationPercent || 0) < 100).length;
+  const fullyAllocated = safeEmps.filter((e) => (e.allocationPercent || 0) >= 100).length;
   const benchPercentage = totalHeadcount > 0 ? Math.round((benchCount / totalHeadcount) * 100) : 0;
-  const pendingLeavesCount = (lvs || []).filter((l) => l.status === 'Pending').length;
+  const pendingLeavesCount = safeLvs.filter((l) => l.status === 'Pending').length;
 
   const departmentDistribution = {};
-  emps.forEach((e) => {
-    departmentDistribution[e.department] = (departmentDistribution[e.department] || 0) + 1;
+  safeEmps.forEach((e) => {
+    const dept = e.department || 'General';
+    departmentDistribution[dept] = (departmentDistribution[dept] || 0) + 1;
   });
 
   const skillCounts = {};
-  emps.forEach((e) => {
-    (e.skills || []).forEach((sk) => {
+  safeEmps.forEach((e) => {
+    const rawSkills = Array.isArray(e.skills)
+      ? e.skills
+      : typeof e.skills === 'string'
+      ? e.skills.split(',').map((s) => s.trim()).filter(Boolean)
+      : [];
+    rawSkills.forEach((sk) => {
       skillCounts[sk] = (skillCounts[sk] || 0) + 1;
     });
   });
@@ -65,7 +75,7 @@ function computeStats(emps, projs, lvs) {
     partiallyAllocated,
     fullyAllocated,
     benchPercentage,
-    totalProjects: projs.length,
+    totalProjects: safeProjs.length,
     pendingLeavesCount,
     departmentDistribution,
     topSkills: Object.entries(skillCounts)
@@ -83,9 +93,24 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState(() => {
     try {
       const session = sessionStorage.getItem('pulsehr_auth');
-      if (session) return JSON.parse(session);
+      if (session) {
+        const parsed = JSON.parse(session);
+        if (parsed?.role === 'employee' && (DEMO_EMPLOYEE_IDS.has(parsed.employee?.id) || DEMO_NAMES.has(parsed.employee?.name))) {
+          sessionStorage.removeItem('pulsehr_auth');
+        } else {
+          return parsed;
+        }
+      }
       const saved = localStorage.getItem('pulsehr_auth');
-      return saved ? JSON.parse(saved) : null;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed?.role === 'employee' && (DEMO_EMPLOYEE_IDS.has(parsed.employee?.id) || DEMO_NAMES.has(parsed.employee?.name))) {
+          localStorage.removeItem('pulsehr_auth');
+          return null;
+        }
+        return parsed;
+      }
+      return null;
     } catch {
       return null;
     }
@@ -101,9 +126,19 @@ export default function App() {
       if (saved) {
         const parsed = JSON.parse(saved);
         // Clean out legacy demo employees so only Admin-added employees exist
-        const realEmployees = parsed.filter(
-          (e) => !DEMO_EMPLOYEE_IDS.has(e.id) && !DEMO_NAMES.has(e.name)
-        );
+        const realEmployees = parsed
+          .filter((e) => !DEMO_EMPLOYEE_IDS.has(e.id) && !DEMO_NAMES.has(e.name))
+          .map((e) => ({
+            ...e,
+            allocationStatus: e.allocationStatus || 'Available (Bench)',
+            allocationPercent: typeof e.allocationPercent === 'number' ? e.allocationPercent : 0,
+            skills: Array.isArray(e.skills)
+              ? e.skills
+              : typeof e.skills === 'string'
+              ? e.skills.split(',').map((s) => s.trim()).filter(Boolean)
+              : ['General'],
+            leaveBalance: e.leaveBalance || { paid: 18, sick: 8, casual: 5 },
+          }));
         localStorage.setItem('pulsehr_employees', JSON.stringify(realEmployees));
         return realEmployees;
       }
@@ -762,11 +797,16 @@ export default function App() {
   const displayedEmployees = searchQuery.trim()
     ? employees.filter((e) => {
         const q = searchQuery.toLowerCase().trim();
+        const sks = Array.isArray(e.skills)
+          ? e.skills
+          : typeof e.skills === 'string'
+          ? e.skills.split(',').map((s) => s.trim()).filter(Boolean)
+          : [];
         return (
-          e.name.toLowerCase().includes(q) ||
-          e.role.toLowerCase().includes(q) ||
-          e.department.toLowerCase().includes(q) ||
-          (e.skills || []).some((sk) => sk.toLowerCase().includes(q))
+          (e.name || '').toLowerCase().includes(q) ||
+          (e.role || '').toLowerCase().includes(q) ||
+          (e.department || '').toLowerCase().includes(q) ||
+          sks.some((sk) => sk.toLowerCase().includes(q))
         );
       })
     : employees;
