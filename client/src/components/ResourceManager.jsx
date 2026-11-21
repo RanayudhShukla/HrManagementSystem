@@ -8,6 +8,8 @@ export default function ResourceManager({
   employees,
   projects,
   onDataChanged,
+  onAllocate,
+  onDeallocate,
 }) {
   const [allocationFilter, setAllocationFilter] = useState('All');
   const [skillFilter, setSkillFilter] = useState('');
@@ -100,16 +102,24 @@ export default function ResourceManager({
       return;
     }
 
+    const pct = parseInt(allocationPercent, 10);
+    const empId = selectedEmpForAllocation.id;
+
+    if (onAllocate) {
+      onAllocate(empId, targetProjectId, pct);
+      setSelectedEmpForAllocation(null);
+      return;
+    }
+
     setAllocatingLoading(true);
     setError('');
-    const pct = parseInt(allocationPercent, 10);
 
     try {
       const res = await fetch('/api/resources/allocate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          employeeId: selectedEmpForAllocation.id,
+          employeeId: empId,
           projectId: targetProjectId,
           allocationPercent: pct,
         }),
@@ -120,12 +130,10 @@ export default function ResourceManager({
         setSelectedEmpForAllocation(null);
         if (onDataChanged) onDataChanged();
       } else {
-        // Optimistic local state update fallback
-        handleLocalFallbackAllocation(selectedEmpForAllocation.id, targetProjectId, pct);
+        handleLocalFallbackAllocation(empId, targetProjectId, pct);
       }
     } catch (err) {
-      // Optimistic local state update fallback
-      handleLocalFallbackAllocation(selectedEmpForAllocation.id, targetProjectId, pct);
+      handleLocalFallbackAllocation(empId, targetProjectId, pct);
     } finally {
       setAllocatingLoading(false);
     }
@@ -133,6 +141,11 @@ export default function ResourceManager({
 
   const handleDeallocate = async (employeeId) => {
     if (!window.confirm('Release this employee from their current project and return to Bench?')) return;
+
+    if (onDeallocate) {
+      onDeallocate(employeeId);
+      return;
+    }
 
     try {
       const res = await fetch('/api/resources/deallocate', {

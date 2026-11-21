@@ -4,6 +4,7 @@ import { CalendarCheck, Check, X, Clock, AlertCircle, FileText } from 'lucide-re
 export default function LeaveManager({
   leaves,
   onDataChanged,
+  onUpdateLeaveStatus,
 }) {
   const [filter, setFilter] = useState('All');
   const [actionLoading, setActionLoading] = useState(false);
@@ -13,6 +14,11 @@ export default function LeaveManager({
   );
 
   const handleUpdateStatus = async (id, status) => {
+    if (onUpdateLeaveStatus) {
+      onUpdateLeaveStatus(id, status);
+      return;
+    }
+
     setActionLoading(true);
     try {
       const res = await fetch(`/api/leaves/${id}/status`, {

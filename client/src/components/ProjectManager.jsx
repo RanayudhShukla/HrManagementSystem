@@ -5,6 +5,7 @@ export default function ProjectManager({
   projects,
   employees,
   onDataChanged,
+  onCreateProject,
 }) {
   const [showAddModal, setShowAddModal] = useState(false);
   const [newProj, setNewProj] = useState({
@@ -20,6 +21,21 @@ export default function ProjectManager({
 
   const handleCreateProject = async (e) => {
     e.preventDefault();
+    if (onCreateProject) {
+      onCreateProject(newProj);
+      setShowAddModal(false);
+      setNewProj({
+        name: '',
+        client: '',
+        lead: '',
+        deadline: '2026-12-31',
+        requiredSkills: '',
+        priority: 'High',
+        budget: '₹40,00,000',
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {

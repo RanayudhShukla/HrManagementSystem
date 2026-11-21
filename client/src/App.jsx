@@ -9,7 +9,48 @@ import LeaveManager from './components/LeaveManager';
 import EmployeePortal from './components/EmployeePortal';
 import LoginPage from './components/LoginPage';
 import { Check, AlertCircle } from 'lucide-react';
-import { SEED_EMPLOYEES, SEED_PROJECTS, SEED_LEAVES } from './data/seedData';
+import { SEED_EMPLOYEES, SEED_PROJECTS, SEED_LEAVES, SEED_TASKS } from './data/seedData';
+import { 
+  syncEmployeeToFirestore, syncProjectToFirestore, 
+  syncLeaveToFirestore, syncTaskToFirestore,
+  getFirestoreEmployees, getFirestoreProjects, getFirestoreLeaves 
+} from './firebase/firestoreService';
+
+function computeStats(emps, projs, lvs) {
+  const totalHeadcount = emps.length;
+  const benchCount = emps.filter((e) => e.allocationStatus === 'Available (Bench)').length;
+  const partiallyAllocated = emps.filter((e) => e.allocationStatus === 'Partially Available').length;
+  const fullyAllocated = emps.filter((e) => e.allocationStatus === 'Fully Booked').length;
+  const benchPercentage = totalHeadcount > 0 ? Math.round((benchCount / totalHeadcount) * 100) : 0;
+  const pendingLeavesCount = (lvs || []).filter((l) => l.status === 'Pending').length;
+
+  const departmentDistribution = {};
+  emps.forEach((e) => {
+    departmentDistribution[e.department] = (departmentDistribution[e.department] || 0) + 1;
+  });
+
+  const skillCounts = {};
+  emps.forEach((e) => {
+    (e.skills || []).forEach((sk) => {
+      skillCounts[sk] = (skillCounts[sk] || 0) + 1;
+    });
+  });
+
+  return {
+    totalHeadcount,
+    benchCount,
+    partiallyAllocated,
+    fullyAllocated,
+    benchPercentage,
+    totalProjects: projs.length,
+    pendingLeavesCount,
+    departmentDistribution,
+    topSkills: Object.entries(skillCounts)
+      .map(([skill, count]) => ({ skill, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 8),
+  };
+}
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState(() => {
@@ -24,16 +65,42 @@ export default function App() {
   const [activeHRTab, setActiveHRTab] = useState('dashboard'); // 'dashboard' | 'resources' | 'directory' | 'projects' | 'leaves'
   const [employeeTab, setEmployeeTab] = useState('tasks'); // 'tasks' | 'holidays' | 'leaves' | 'payroll'
   
-  const [employees, setEmployees] = useState([]);
-  const [projects, setProjects] = useState([]);
-  const [leaves, setLeaves] = useState([]);
-  const [stats, setStats] = useState(null);
+  // Authoritative State with instant localStorage persistence
+  const [employees, setEmployees] = useState(() => {
+    try {
+      const saved = localStorage.getItem('pulsehr_employees');
+      return saved ? JSON.parse(saved) : SEED_EMPLOYEES;
+    } catch {
+      return SEED_EMPLOYEES;
+    }
+  });
+
+  const [projects, setProjects] = useState(() => {
+    try {
+      const saved = localStorage.getItem('pulsehr_projects');
+      return saved ? JSON.parse(saved) : SEED_PROJECTS;
+    } catch {
+      return SEED_PROJECTS;
+    }
+  });
+
+  const [leaves, setLeaves] = useState(() => {
+    try {
+      const saved = localStorage.getItem('pulsehr_leaves');
+      return saved ? JSON.parse(saved) : SEED_LEAVES;
+    } catch {
+      return SEED_LEAVES;
+    }
+  });
+
+  const [stats, setStats] = useState(() => computeStats(
+    employees.length ? employees : SEED_EMPLOYEES,
+    projects.length ? projects : SEED_PROJECTS,
+    leaves.length ? leaves : SEED_LEAVES
+  ));
   
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  
   const [toast, setToast] = useState('');
 
   const showToast = (msg) => {
@@ -60,104 +127,270 @@ export default function App() {
     showToast('Signed out successfully.');
   };
 
-  const fetchAllData = async () => {
-    setLoading(true);
-    setError('');
+  // 1. ALLOCATE RESOURCE HANDLER (Instant Reactive State)
+  const handleAllocateEmployee = async (employeeId, projectId, pct) => {
+    const proj = projects.find((p) => p.id === projectId);
+    const emp = employees.find((e) => e.id === employeeId);
+    if (!emp || !proj) return;
 
-    let empData = null;
-    let projData = null;
-    let leaveData = null;
-    let statData = null;
+    const updatedEmployees = employees.map((e) => {
+      if (e.id === employeeId) {
+        return {
+          ...e,
+          assignedProjectId: proj.id,
+          assignedProjectName: proj.name,
+          allocationPercent: pct,
+          allocationStatus: pct >= 100 ? 'Fully Booked' : pct > 0 ? 'Partially Available' : 'Available (Bench)',
+        };
+      }
+      return e;
+    });
 
+    const updatedProjects = projects.map((p) => {
+      let members = Array.isArray(p.allocatedMembers) ? [...p.allocatedMembers] : [];
+      if (p.id === projectId) {
+        if (!members.includes(employeeId)) members.push(employeeId);
+      } else {
+        members = members.filter((id) => id !== employeeId);
+      }
+      return { ...p, allocatedMembers: members };
+    });
+
+    // Instant State Update
+    setEmployees(updatedEmployees);
+    setProjects(updatedProjects);
+    localStorage.setItem('pulsehr_employees', JSON.stringify(updatedEmployees));
+    localStorage.setItem('pulsehr_projects', JSON.stringify(updatedProjects));
+    setStats(computeStats(updatedEmployees, updatedProjects, leaves));
+    showToast(`${emp.name} allocated to ${proj.name} at ${pct}% capacity!`);
+
+    // Cloud Firestore Sync (Background)
+    const targetEmp = updatedEmployees.find((e) => e.id === employeeId);
+    if (targetEmp) syncEmployeeToFirestore(targetEmp);
+    const targetProj = updatedProjects.find((p) => p.id === projectId);
+    if (targetProj) syncProjectToFirestore(targetProj);
+
+    // REST API Sync (Background)
     try {
-      const searchParam = searchQuery.trim() ? `?search=${encodeURIComponent(searchQuery.trim())}` : '';
-      const [empRes, projRes, leaveRes, statRes] = await Promise.all([
-        fetch(`/api/employees${searchParam}`).catch(() => null),
-        fetch('/api/projects').catch(() => null),
-        fetch('/api/leaves').catch(() => null),
-        fetch('/api/hrms/stats').catch(() => null),
-      ]);
-
-      if (empRes && empRes.ok) empData = await empRes.json();
-      if (projRes && projRes.ok) projData = await projRes.json();
-      if (leaveRes && leaveRes.ok) leaveData = await leaveRes.json();
-      if (statRes && statRes.ok) statData = await statRes.json();
-    } catch (err) {
-      console.warn('API fetch warning:', err);
-    }
-
-    // 1. Employees data (API -> localStorage -> seedData)
-    let currentEmployees = SEED_EMPLOYEES;
-    if (empData && empData.success && Array.isArray(empData.data)) {
-      currentEmployees = empData.data;
-      localStorage.setItem('pulsehr_employees', JSON.stringify(currentEmployees));
-    } else {
-      const saved = localStorage.getItem('pulsehr_employees');
-      if (saved) {
-        try { currentEmployees = JSON.parse(saved); } catch {}
-      }
-    }
-    setEmployees(currentEmployees);
-
-    if (currentUser?.role === 'employee' && currentUser.employee) {
-      const freshSelf = currentEmployees.find((e) => e.id === currentUser.employee.id);
-      if (freshSelf) setSelectedEmployee(freshSelf);
-    }
-
-    // 2. Projects data
-    let currentProjects = SEED_PROJECTS;
-    if (projData && projData.success && Array.isArray(projData.data)) {
-      currentProjects = projData.data;
-      localStorage.setItem('pulsehr_projects', JSON.stringify(currentProjects));
-    } else {
-      const saved = localStorage.getItem('pulsehr_projects');
-      if (saved) {
-        try { currentProjects = JSON.parse(saved); } catch {}
-      }
-    }
-    setProjects(currentProjects);
-
-    // 3. Leaves data
-    let currentLeaves = SEED_LEAVES;
-    if (leaveData && leaveData.success && Array.isArray(leaveData.data)) {
-      currentLeaves = leaveData.data;
-      localStorage.setItem('pulsehr_leaves', JSON.stringify(currentLeaves));
-    } else {
-      const saved = localStorage.getItem('pulsehr_leaves');
-      if (saved) {
-        try { currentLeaves = JSON.parse(saved); } catch {}
-      }
-    }
-    setLeaves(currentLeaves);
-
-    // 4. Stats data
-    if (statData && statData.success && statData.stats) {
-      setStats(statData.stats);
-    } else {
-      const totalHeadcount = currentEmployees.length;
-      const benchCount = currentEmployees.filter((e) => e.allocationStatus === 'Available (Bench)').length;
-      const partiallyAllocated = currentEmployees.filter((e) => e.allocationStatus === 'Partially Available').length;
-      const fullyAllocated = currentEmployees.filter((e) => e.allocationStatus === 'Fully Booked').length;
-      const benchPercentage = totalHeadcount > 0 ? Math.round((benchCount / totalHeadcount) * 100) : 0;
-      const pendingLeavesCount = currentLeaves.filter((l) => l.status === 'Pending').length;
-
-      setStats({
-        totalHeadcount,
-        benchCount,
-        partiallyAllocated,
-        fullyAllocated,
-        benchPercentage,
-        totalProjects: currentProjects.length,
-        pendingLeavesCount,
+      await fetch('/api/resources/allocate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ employeeId, projectId, allocationPercent: pct }),
       });
-    }
-
-    setLoading(false);
+    } catch {}
   };
 
+  // 2. DEALLOCATE RESOURCE HANDLER (Instant Reactive State)
+  const handleDeallocateEmployee = async (employeeId) => {
+    const emp = employees.find((e) => e.id === employeeId);
+    if (!emp) return;
+
+    const updatedEmployees = employees.map((e) => {
+      if (e.id === employeeId) {
+        return {
+          ...e,
+          assignedProjectId: null,
+          assignedProjectName: 'Unassigned (Available for new project)',
+          allocationPercent: 0,
+          allocationStatus: 'Available (Bench)',
+        };
+      }
+      return e;
+    });
+
+    const updatedProjects = projects.map((p) => {
+      let members = Array.isArray(p.allocatedMembers) ? [...p.allocatedMembers] : [];
+      members = members.filter((id) => id !== employeeId);
+      return { ...p, allocatedMembers: members };
+    });
+
+    // Instant State Update
+    setEmployees(updatedEmployees);
+    setProjects(updatedProjects);
+    localStorage.setItem('pulsehr_employees', JSON.stringify(updatedEmployees));
+    localStorage.setItem('pulsehr_projects', JSON.stringify(updatedProjects));
+    setStats(computeStats(updatedEmployees, updatedProjects, leaves));
+    showToast(`${emp.name} released and returned to Bench.`);
+
+    // Cloud Firestore Sync (Background)
+    const targetEmp = updatedEmployees.find((e) => e.id === employeeId);
+    if (targetEmp) syncEmployeeToFirestore(targetEmp);
+
+    // REST API Sync (Background)
+    try {
+      await fetch('/api/resources/deallocate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ employeeId }),
+      });
+    } catch {}
+  };
+
+  // 3. CREATE EMPLOYEE HANDLER
+  const handleCreateEmployee = async (newEmp) => {
+    const createdEmp = {
+      id: `EMP-${Math.floor(1000 + Math.random() * 9000)}`,
+      status: 'Active',
+      type: 'Full-Time',
+      joiningDate: new Date().toISOString().split('T')[0],
+      allocationStatus: 'Available (Bench)',
+      allocationPercent: 0,
+      assignedProjectId: null,
+      assignedProjectName: 'Unassigned (Available for new project)',
+      leaveBalance: { paid: 18, sick: 8, casual: 5 },
+      ...newEmp,
+      skills: Array.isArray(newEmp.skills)
+        ? newEmp.skills
+        : (newEmp.skills ? newEmp.skills.split(',').map((s) => s.trim()) : ['General']),
+    };
+
+    const updatedEmployees = [createdEmp, ...employees];
+    setEmployees(updatedEmployees);
+    localStorage.setItem('pulsehr_employees', JSON.stringify(updatedEmployees));
+    setStats(computeStats(updatedEmployees, projects, leaves));
+    showToast(`New employee ${createdEmp.name} onboarded!`);
+
+    syncEmployeeToFirestore(createdEmp);
+    try {
+      await fetch('/api/employees', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(createdEmp),
+      });
+    } catch {}
+  };
+
+  // 4. DELETE EMPLOYEE HANDLER
+  const handleDeleteEmployee = async (employeeId) => {
+    const updatedEmployees = employees.filter((e) => e.id !== employeeId);
+    setEmployees(updatedEmployees);
+    localStorage.setItem('pulsehr_employees', JSON.stringify(updatedEmployees));
+    setStats(computeStats(updatedEmployees, projects, leaves));
+    showToast('Employee offboarded from company directory.');
+
+    try {
+      await fetch(`/api/employees/${employeeId}`, { method: 'DELETE' });
+    } catch {}
+  };
+
+  // 5. CREATE PROJECT HANDLER
+  const handleCreateProject = async (newProj) => {
+    const createdProj = {
+      id: `PROJ-${Math.floor(200 + Math.random() * 800)}`,
+      status: 'In Progress',
+      startDate: new Date().toISOString().split('T')[0],
+      allocatedMembers: [],
+      ...newProj,
+      requiredSkills: Array.isArray(newProj.requiredSkills)
+        ? newProj.requiredSkills
+        : (newProj.requiredSkills ? newProj.requiredSkills.split(',').map((s) => s.trim()) : []),
+    };
+
+    const updatedProjects = [createdProj, ...projects];
+    setProjects(updatedProjects);
+    localStorage.setItem('pulsehr_projects', JSON.stringify(updatedProjects));
+    setStats(computeStats(employees, updatedProjects, leaves));
+    showToast(`Project ${createdProj.name} created!`);
+
+    syncProjectToFirestore(createdProj);
+    try {
+      await fetch('/api/projects', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(createdProj),
+      });
+    } catch {}
+  };
+
+  // 6. UPDATE LEAVE STATUS HANDLER (Approve/Reject)
+  const handleUpdateLeaveStatus = async (leaveId, status) => {
+    const updatedLeaves = leaves.map((l) => (l.id === leaveId ? { ...l, status } : l));
+    setLeaves(updatedLeaves);
+    localStorage.setItem('pulsehr_leaves', JSON.stringify(updatedLeaves));
+
+    // If approved, decrement employee leave balance
+    if (status === 'Approved') {
+      const targetLeave = leaves.find((l) => l.id === leaveId);
+      if (targetLeave) {
+        const updatedEmployees = employees.map((emp) => {
+          if (emp.id === targetLeave.employeeId && emp.leaveBalance) {
+            const key = targetLeave.leaveType.toLowerCase().includes('sick')
+              ? 'sick'
+              : targetLeave.leaveType.toLowerCase().includes('casual')
+              ? 'casual'
+              : 'paid';
+            const currentBal = emp.leaveBalance[key] || 0;
+            return {
+              ...emp,
+              leaveBalance: {
+                ...emp.leaveBalance,
+                [key]: Math.max(0, currentBal - targetLeave.daysCount),
+              },
+            };
+          }
+          return emp;
+        });
+        setEmployees(updatedEmployees);
+        localStorage.setItem('pulsehr_employees', JSON.stringify(updatedEmployees));
+      }
+    }
+
+    setStats(computeStats(employees, projects, updatedLeaves));
+    showToast(`Leave request marked as ${status}!`);
+
+    const targetL = updatedLeaves.find((l) => l.id === leaveId);
+    if (targetL) syncLeaveToFirestore(targetL);
+
+    try {
+      await fetch(`/api/leaves/${leaveId}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      });
+    } catch {}
+  };
+
+  // Background Cloud Sync
   useEffect(() => {
-    fetchAllData();
-  }, [searchQuery]);
+    const syncCloudData = async () => {
+      try {
+        const [cloudEmps, cloudProjs, cloudLeaves] = await Promise.all([
+          getFirestoreEmployees().catch(() => null),
+          getFirestoreProjects().catch(() => null),
+          getFirestoreLeaves().catch(() => null),
+        ]);
+
+        if (cloudEmps && cloudEmps.length > 0) {
+          setEmployees(cloudEmps);
+          localStorage.setItem('pulsehr_employees', JSON.stringify(cloudEmps));
+        }
+        if (cloudProjs && cloudProjs.length > 0) {
+          setProjects(cloudProjs);
+          localStorage.setItem('pulsehr_projects', JSON.stringify(cloudProjs));
+        }
+        if (cloudLeaves && cloudLeaves.length > 0) {
+          setLeaves(cloudLeaves);
+          localStorage.setItem('pulsehr_leaves', JSON.stringify(cloudLeaves));
+        }
+      } catch (e) {
+        console.warn('Initial cloud sync notice:', e);
+      }
+    };
+    syncCloudData();
+  }, []);
+
+  // Filter employees for search query
+  const displayedEmployees = searchQuery.trim()
+    ? employees.filter((e) => {
+        const q = searchQuery.toLowerCase().trim();
+        return (
+          e.name.toLowerCase().includes(q) ||
+          e.role.toLowerCase().includes(q) ||
+          e.department.toLowerCase().includes(q) ||
+          (e.skills || []).some((sk) => sk.toLowerCase().includes(q))
+        );
+      })
+    : employees;
 
   // If user is not logged in, render the clean login screen!
   if (!currentUser) {
@@ -202,21 +435,6 @@ export default function App() {
 
         {/* Main Content */}
         <main className="flex-1 p-6 sm:p-8 max-w-7xl w-full mx-auto space-y-6">
-          {error && (
-            <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 shrink-0" />
-                <span>{error}</span>
-              </div>
-              <button
-                onClick={fetchAllData}
-                className="px-3 py-1 rounded-lg bg-rose-100 hover:bg-rose-200 font-semibold"
-              >
-                Retry
-              </button>
-            </div>
-          )}
-
           {/* VIEW 1: HR EXECUTIVE SUITE (Only rendered if HR Admin is logged in) */}
           {isHR ? (
             <div>
@@ -229,16 +447,18 @@ export default function App() {
 
               {activeHRTab === 'resources' && (
                 <ResourceManager
-                  employees={employees}
+                  employees={displayedEmployees}
                   projects={projects}
-                  onDataChanged={fetchAllData}
+                  onAllocate={handleAllocateEmployee}
+                  onDeallocate={handleDeallocateEmployee}
                 />
               )}
 
               {activeHRTab === 'directory' && (
                 <WorkforceDirectory
-                  employees={employees}
-                  onDataChanged={fetchAllData}
+                  employees={displayedEmployees}
+                  onCreateEmployee={handleCreateEmployee}
+                  onDeleteEmployee={handleDeleteEmployee}
                 />
               )}
 
@@ -246,14 +466,14 @@ export default function App() {
                 <ProjectManager
                   projects={projects}
                   employees={employees}
-                  onDataChanged={fetchAllData}
+                  onCreateProject={handleCreateProject}
                 />
               )}
 
               {activeHRTab === 'leaves' && (
                 <LeaveManager
                   leaves={leaves}
-                  onDataChanged={fetchAllData}
+                  onUpdateLeaveStatus={handleUpdateLeaveStatus}
                 />
               )}
             </div>
@@ -266,7 +486,6 @@ export default function App() {
               onSubTabChange={setEmployeeTab}
               onLeaveSubmitted={() => {
                 showToast('Leave request submitted! Awaiting manager approval.');
-                fetchAllData();
               }}
             />
           )}

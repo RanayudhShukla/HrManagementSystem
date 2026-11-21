@@ -4,6 +4,8 @@ import { Users, Plus, Trash2, Mail, Phone, Calendar, DollarSign, X } from 'lucid
 export default function WorkforceDirectory({
   employees,
   onDataChanged,
+  onCreateEmployee,
+  onDeleteEmployee,
 }) {
   const [showAddModal, setShowAddModal] = useState(false);
   const [newEmp, setNewEmp] = useState({
@@ -20,6 +22,22 @@ export default function WorkforceDirectory({
 
   const handleCreateEmployee = async (e) => {
     e.preventDefault();
+    if (onCreateEmployee) {
+      onCreateEmployee(newEmp);
+      setShowAddModal(false);
+      setNewEmp({
+        name: '',
+        email: '',
+        phone: '',
+        department: 'Engineering',
+        role: '',
+        salary: '₹14,00,000 / yr',
+        skills: '',
+        workMode: 'Hybrid (Bengaluru HQ)',
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -53,6 +71,11 @@ export default function WorkforceDirectory({
 
   const handleDeleteEmployee = async (id, name) => {
     if (!window.confirm(`Offboard and remove ${name} from the company directory?`)) return;
+
+    if (onDeleteEmployee) {
+      onDeleteEmployee(id);
+      return;
+    }
 
     try {
       const res = await fetch(`/api/employees/${id}`, {
