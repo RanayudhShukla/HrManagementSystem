@@ -485,7 +485,7 @@ export default function EmployeePortal({
               : 'text-slate-600 hover:bg-white hover:text-slate-900'
           }`}
         >
-          <RupeeIcon className="w-4 h-4" />
+          <Banknote className="w-4 h-4" />
           <span>CTC & Compensation Breakdown</span>
         </button>
       </div>
