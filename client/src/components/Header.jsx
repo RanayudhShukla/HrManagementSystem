@@ -13,6 +13,7 @@ export default function Header({
   onMarkRead,
   onMarkAllRead,
   onClearAll,
+  employees = [],
 }) {
   const isHR = currentUser?.role === 'hr';
   const employeeId = currentUser?.employee?.id;
@@ -77,20 +78,22 @@ export default function Header({
       <div className="flex items-center gap-4">
         {/* Team Avatars Group */}
         <div className="hidden lg:flex items-center -space-x-2">
-          {['Aarav', 'Elena', 'Marcus', 'Kavita'].map((name, i) => (
+          {employees.slice(0, 4).map((emp, i) => (
             <div
-              key={name}
+              key={emp.id || emp.name}
               className={`w-7 h-7 rounded-full text-white text-[10px] font-bold flex items-center justify-center border-2 border-white shadow-xs ${
                 i === 0 ? 'bg-[#ff5c8a]' : i === 1 ? 'bg-[#72c2ff]' : i === 2 ? 'bg-[#f59e0b]' : 'bg-[#452473]'
               }`}
-              title={name}
+              title={`${emp.name} (${emp.id || ''})`}
             >
-              {name[0]}
+              {(emp.name || 'E')[0]}
             </div>
           ))}
-          <div className="w-7 h-7 rounded-full bg-[#452473] text-white text-[11px] font-bold flex items-center justify-center border-2 border-white shadow-xs">
-            +
-          </div>
+          {employees.length > 4 && (
+            <div className="w-7 h-7 rounded-full bg-[#452473] text-white text-[11px] font-bold flex items-center justify-center border-2 border-white shadow-xs">
+              +{employees.length - 4}
+            </div>
+          )}
         </div>
 
         {/* Real-Time Notification Bell Popover */}

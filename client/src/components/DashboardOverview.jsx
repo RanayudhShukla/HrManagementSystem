@@ -4,7 +4,7 @@ import {
   TrendingUp, FileText, CheckSquare, Coffee, AlertCircle, ArrowUpRight, Bell 
 } from 'lucide-react';
 
-export default function DashboardOverview({ stats, onNavigateToTab, notifications = [] }) {
+export default function DashboardOverview({ stats, onNavigateToTab, notifications = [], employees = [] }) {
   if (!stats) return null;
 
   const hrNotifications = notifications.filter((n) => n.targetRole === 'hr' || n.targetRole === 'all');
@@ -260,28 +260,28 @@ export default function DashboardOverview({ stats, onNavigateToTab, notification
           <h3 className="text-sm font-bold text-slate-800">Upcoming Resource Reviews</h3>
 
           <div className="space-y-3">
-            {[
-              { name: 'Aarav Sharma', role: 'Lead Frontend Architect', time: '11:30 - 12:30', color: 'bg-amber-400' },
-              { name: 'Kavita Verma', role: 'Talent Acquisition Mgr', time: '2:00 - 3:00', color: 'bg-[#ff5c8a]' },
-              { name: 'Vikram Malhotra', role: 'Full-Stack Engineer', time: '3:30 - 4:30', color: 'bg-[#72c2ff]' },
-              { name: 'Elena Rostova', role: 'Principal Designer', time: '5:00 - 6:00', color: 'bg-[#452473]' },
-            ].map((person, idx) => (
+            {(employees && employees.length > 0 ? employees.slice(0, 4) : []).map((person, idx) => (
               <div key={idx} className="flex items-center justify-between text-xs py-1.5 border-b border-slate-100 last:border-none">
                 <div className="flex items-center gap-2.5">
-                  <div className={`w-8 h-8 rounded-full ${person.color} text-white font-bold flex items-center justify-center text-[10px]`}>
-                    {person.name[0]}
+                  <div className={`w-8 h-8 rounded-full ${['bg-amber-400', 'bg-[#ff5c8a]', 'bg-[#72c2ff]', 'bg-[#452473]'][idx % 4]} text-white font-bold flex items-center justify-center text-[10px]`}>
+                    {person.name ? person.name[0] : 'E'}
                   </div>
                   <div>
                     <p className="font-bold text-slate-800">{person.name}</p>
-                    <p className="text-[10px] text-slate-400">{person.role}</p>
+                    <p className="text-[10px] text-slate-400">{person.role || person.department || 'Active Team Member'}</p>
                   </div>
                 </div>
                 <span className="text-[10px] font-mono font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md flex items-center gap-1">
                   <Clock className="w-3 h-3 text-slate-400" />
-                  {person.time}
+                  {idx === 0 ? '11:30 - 12:30' : idx === 1 ? '2:00 - 3:00' : idx === 2 ? '3:30 - 4:30' : '5:00 - 6:00'}
                 </span>
               </div>
             ))}
+            {(!employees || employees.length === 0) && (
+              <div className="py-6 text-center text-xs text-slate-400">
+                No active employee reviews. Onboard new employees in Directory.
+              </div>
+            )}
           </div>
         </div>
 

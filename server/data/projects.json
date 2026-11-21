@@ -4,7 +4,7 @@
     "name": "NextGen Cloud Payroll Platform",
     "client": "NextGen Enterprise",
     "status": "In Progress",
-    "lead": "Vikram Batra",
+    "lead": "Engineering Lead",
     "startDate": "2026-11-21",
     "deadline": "2026-12-31",
     "requiredSkills": [
@@ -21,7 +21,7 @@
     "name": "BharatPay UPI & Banking Gateway",
     "client": "BharatPay Financial Technologies",
     "status": "In Progress",
-    "lead": "David Chen",
+    "lead": "Technical PM",
     "startDate": "2024-05-01",
     "deadline": "2026-12-30",
     "requiredSkills": [
@@ -30,10 +30,7 @@
       "Node.js",
       "Security"
     ],
-    "allocatedMembers": [
-      "EMP-1001",
-      "EMP-1005"
-    ],
+    "allocatedMembers": [],
     "budget": "₹48,00,000",
     "priority": "High"
   },
@@ -42,7 +39,7 @@
     "name": "Vortex Cloud Analytics Platform",
     "client": "Tata Digital Analytics Ltd.",
     "status": "In Progress",
-    "lead": "Elena Rostova",
+    "lead": "Design Lead",
     "startDate": "2024-06-15",
     "deadline": "2027-01-20",
     "requiredSkills": [
@@ -51,10 +48,7 @@
       "Node.js",
       "PostgreSQL"
     ],
-    "allocatedMembers": [
-      "EMP-1002",
-      "EMP-1007"
-    ],
+    "allocatedMembers": [],
     "budget": "₹35,00,000",
     "priority": "Medium"
   },
@@ -63,7 +57,7 @@
     "name": "Q4 Global Tech Hiring Ramp",
     "client": "Internal HR Operations",
     "status": "In Progress",
-    "lead": "Kavita Verma",
+    "lead": "HR Operations",
     "startDate": "2024-09-01",
     "deadline": "2026-12-31",
     "requiredSkills": [
@@ -71,9 +65,7 @@
       "Onboarding",
       "Screening"
     ],
-    "allocatedMembers": [
-      "EMP-1004"
-    ],
+    "allocatedMembers": [],
     "budget": "₹15,00,000",
     "priority": "High"
   },
@@ -82,7 +74,7 @@
     "name": "AI Workflow Automation Engine",
     "client": "Reliance Jio Healthcare Systems",
     "status": "Planning",
-    "lead": "Marcus Vance",
+    "lead": "Tech Architect",
     "startDate": "2026-12-01",
     "deadline": "2027-04-15",
     "requiredSkills": [
@@ -91,9 +83,7 @@
       "DevOps",
       "Microservices"
     ],
-    "allocatedMembers": [
-      "EMP-1001"
-    ],
+    "allocatedMembers": [],
     "budget": "₹55,00,000",
     "priority": "Urgent"
   }

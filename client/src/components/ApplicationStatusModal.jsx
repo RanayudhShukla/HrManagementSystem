@@ -11,8 +11,8 @@ export default function ApplicationStatusModal({ isOpen, onClose }) {
   useEffect(() => {
     if (isOpen) {
       setError('');
-      setQuery('aarav.sharma@example.com'); // helpful pre-fill for demo
-      fetchCandidates('aarav.sharma@example.com');
+      setQuery('');
+      fetchCandidates('');
     }
   }, [isOpen]);
 
@@ -57,7 +57,7 @@ export default function ApplicationStatusModal({ isOpen, onClose }) {
       setError('');
     } else {
       setMatchedCandidate(null);
-      setError(`No application found for "${query}". Try searching "aarav.sharma@example.com" or ID "cand-001".`);
+      setError(`No application found for "${query}". Try searching by corporate email or Candidate ID.`);
     }
   };
 
@@ -105,7 +105,7 @@ export default function ApplicationStatusModal({ isOpen, onClose }) {
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
-              placeholder="Search by Email (e.g. aarav.sharma@example.com) or Application ID..."
+              placeholder="Search by Email Address or Application ID..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-400"

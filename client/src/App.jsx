@@ -75,6 +75,10 @@ function computeStats(emps, projs, lvs) {
   };
 }
 
+// Legacy demo identities permanently purged from the production database
+const DEMO_EMPLOYEE_IDS = new Set(['EMP-1001', 'EMP-1002', 'EMP-1003', 'EMP-1004', 'EMP-1005', 'EMP-1006', 'EMP-1007', 'EMP-3201']);
+const DEMO_NAMES = new Set(['Aarav Sharma', 'Elena Rostova', 'Marcus Vance', 'Kavita Verma', 'David Chen', 'Sarah Miller', 'Vikram Malhotra', 'Vikram Batra']);
+
 export default function App() {
   const [currentUser, setCurrentUser] = useState(() => {
     try {
@@ -90,27 +94,40 @@ export default function App() {
   const [activeHRTab, setActiveHRTab] = useState('dashboard'); // 'dashboard' | 'resources' | 'directory' | 'projects' | 'leaves'
   const [employeeTab, setEmployeeTab] = useState('tasks'); // 'tasks' | 'holidays' | 'leaves' | 'payroll'
   
-  // Authoritative State with instant localStorage persistence
+  // Authoritative State with instant localStorage persistence (Clean Corporate Slate)
   const [employees, setEmployees] = useState(() => {
     try {
       const saved = localStorage.getItem('pulsehr_employees');
       if (saved) {
         const parsed = JSON.parse(saved);
-        return parsed.map((e) => ({
-          ...e,
-          email: e.email ? e.email.replace('@pulsehr.com', '@cooperate.com') : e.email,
-        }));
+        // Clean out legacy demo employees so only Admin-added employees exist
+        const realEmployees = parsed.filter(
+          (e) => !DEMO_EMPLOYEE_IDS.has(e.id) && !DEMO_NAMES.has(e.name)
+        );
+        localStorage.setItem('pulsehr_employees', JSON.stringify(realEmployees));
+        return realEmployees;
       }
-      return SEED_EMPLOYEES;
+      return [];
     } catch {
-      return SEED_EMPLOYEES;
+      return [];
     }
   });
 
   const [projects, setProjects] = useState(() => {
     try {
       const saved = localStorage.getItem('pulsehr_projects');
-      return saved ? JSON.parse(saved) : SEED_PROJECTS;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        const cleaned = parsed.map((p) => ({
+          ...p,
+          allocatedMembers: Array.isArray(p.allocatedMembers)
+            ? p.allocatedMembers.filter((id) => !DEMO_EMPLOYEE_IDS.has(id))
+            : [],
+        }));
+        localStorage.setItem('pulsehr_projects', JSON.stringify(cleaned));
+        return cleaned;
+      }
+      return SEED_PROJECTS;
     } catch {
       return SEED_PROJECTS;
     }
@@ -119,9 +136,15 @@ export default function App() {
   const [leaves, setLeaves] = useState(() => {
     try {
       const saved = localStorage.getItem('pulsehr_leaves');
-      return saved ? JSON.parse(saved) : SEED_LEAVES;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        const cleaned = parsed.filter((l) => !DEMO_EMPLOYEE_IDS.has(l.employeeId));
+        localStorage.setItem('pulsehr_leaves', JSON.stringify(cleaned));
+        return cleaned;
+      }
+      return [];
     } catch {
-      return SEED_LEAVES;
+      return [];
     }
   });
 
@@ -797,6 +820,7 @@ export default function App() {
           onMarkRead={handleMarkNotificationRead}
           onMarkAllRead={handleMarkAllNotificationsRead}
           onClearAll={handleClearNotifications}
+          employees={employees}
         />
 
         {/* Main Content */}
@@ -809,6 +833,7 @@ export default function App() {
                   stats={stats}
                   onNavigateToTab={(tab) => setActiveHRTab(tab)}
                   notifications={notifications}
+                  employees={employees}
                 />
               )}
 

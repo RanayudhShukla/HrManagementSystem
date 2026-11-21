@@ -22,7 +22,7 @@ export default function WorkforceDirectory({
     const nums = employees
       .map((e) => parseInt((e.id || '').replace('EMP-', ''), 10))
       .filter((n) => !isNaN(n));
-    const max = nums.length > 0 ? Math.max(...nums) : 1007;
+    const max = nums.length > 0 ? Math.max(...nums) : 1000;
     return `EMP-${max + 1}`;
   };
 
@@ -303,8 +303,16 @@ export default function WorkforceDirectory({
       </div>
 
       {filteredEmployees.length === 0 && (
-        <div className="py-12 text-center text-slate-400 text-xs">
-          No employees found matching the search or department filter.
+        <div className="py-16 text-center text-slate-400 text-xs bg-white rounded-2xl border border-slate-200/80 p-8">
+          <UserPlus className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+          <p className="font-bold text-slate-700 text-sm">No employees in directory yet</p>
+          <p className="text-slate-400 mt-1 mb-4">Click "+ Onboard Employee" to provision credentials and add team members.</p>
+          <button
+            onClick={handleOpenAddModal}
+            className="px-4 py-2 bg-[#452473] hover:bg-[#381a60] text-white font-bold text-xs rounded-xl shadow-xs transition"
+          >
+            + Onboard First Employee
+          </button>
         </div>
       )}
 
