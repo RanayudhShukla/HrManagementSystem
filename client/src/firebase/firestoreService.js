@@ -33,6 +33,34 @@ export async function seedFirestoreWithData(employees, projects, leaves, tasks =
   }
 }
 
+// Realtime listener for employees
+export function subscribeToFirestoreEmployees(onUpdate) {
+  try {
+    return onSnapshot(collection(db, COLLECTIONS.EMPLOYEES), (snapshot) => {
+      if (!snapshot.empty) {
+        const emps = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+        onUpdate(emps);
+      }
+    }, () => {});
+  } catch {
+    return () => {};
+  }
+}
+
+// Realtime listener for projects
+export function subscribeToFirestoreProjects(onUpdate) {
+  try {
+    return onSnapshot(collection(db, COLLECTIONS.PROJECTS), (snapshot) => {
+      if (!snapshot.empty) {
+        const projs = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+        onUpdate(projs);
+      }
+    }, () => {});
+  } catch {
+    return () => {};
+  }
+}
+
 // Fetch all employees from Firestore collection
 export async function getFirestoreEmployees() {
   try {

@@ -16,6 +16,7 @@ const EMPLOYEES_FILE = path.join(__dirname, 'data', 'employees.json');
 const PROJECTS_FILE = path.join(__dirname, 'data', 'projects.json');
 const LEAVES_FILE = path.join(__dirname, 'data', 'leaves.json');
 const TASKS_FILE = path.join(__dirname, 'data', 'tasks.json');
+const NOTIFICATIONS_FILE = path.join(__dirname, 'data', 'notifications.json');
 
 // File I/O helpers
 async function readData(filePath) {
@@ -275,14 +276,17 @@ app.get('/api/projects', async (req, res) => {
 // POST /api/projects
 app.post('/api/projects', async (req, res) => {
   try {
-    const { name, client, lead, deadline, requiredSkills, priority, budget } = req.body;
+    const { id, name, client, lead, deadline, requiredSkills, priority, budget, allocatedMembers } = req.body;
     if (!name || !client) {
       return res.status(400).json({ success: false, message: 'Project name and client are required' });
     }
 
     const projects = await readData(PROJECTS_FILE);
+    const employees = await readData(EMPLOYEES_FILE);
+
+    const members = Array.isArray(allocatedMembers) ? allocatedMembers : [];
     const newProject = {
-      id: `PROJ-${Math.floor(200 + Math.random() * 800)}`,
+      id: id?.trim() || `PROJ-${Math.floor(200 + Math.random() * 800)}`,
       name,
       client,
       status: 'In Progress',
@@ -291,13 +295,32 @@ app.post('/api/projects', async (req, res) => {
       deadline: deadline || '2026-12-31',
       requiredSkills: Array.isArray(requiredSkills)
         ? requiredSkills
-        : (requiredSkills ? requiredSkills.split(',').map((s) => s.trim()) : []),
-      allocatedMembers: [],
-      budget: budget || '$100,000',
-      priority: priority || 'Medium',
+        : (requiredSkills ? requiredSkills.split(',').map((s) => s.trim()) : ['React', 'Node.js']),
+      allocatedMembers: members,
+      budget: budget || '₹40,00,000',
+      priority: priority || 'High',
     };
 
-    projects.unshift(newProject);
+    // Update allocated employees in employees.json
+    if (members.length > 0) {
+      members.forEach((empId) => {
+        const emp = employees.find((e) => e.id === empId);
+        if (emp) {
+          emp.assignedProjectId = newProject.id;
+          emp.assignedProjectName = newProject.name;
+          emp.allocationPercent = emp.allocationPercent > 0 ? emp.allocationPercent : 100;
+          emp.allocationStatus = emp.allocationPercent >= 100 ? 'Fully Booked' : 'Partially Available';
+        }
+      });
+      await writeData(EMPLOYEES_FILE, employees);
+    }
+
+    const existingIdx = projects.findIndex((p) => p.id === newProject.id);
+    if (existingIdx >= 0) {
+      projects[existingIdx] = newProject;
+    } else {
+      projects.unshift(newProject);
+    }
     await writeData(PROJECTS_FILE, projects);
 
     res.status(201).json({ success: true, data: newProject });
@@ -543,6 +566,58 @@ app.get('/api/hrms/stats', async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Failed to compute HR stats' });
+  }
+});
+
+// ==========================================
+// 5.5 NOTIFICATIONS ENGINE
+// ==========================================
+app.get('/api/notifications', async (req, res) => {
+  try {
+    const notifications = await readData(NOTIFICATIONS_FILE);
+    res.json({ success: true, count: notifications.length, data: notifications });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to retrieve notifications' });
+  }
+});
+
+app.post('/api/notifications', async (req, res) => {
+  try {
+    const notif = req.body;
+    const notifications = await readData(NOTIFICATIONS_FILE);
+    const newNotif = {
+      id: notif.id || `NOTIF-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      timestamp: notif.timestamp || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      read: false,
+      createdAt: notif.createdAt || new Date().toISOString(),
+      ...notif,
+    };
+    notifications.unshift(newNotif);
+    await writeData(NOTIFICATIONS_FILE, notifications.slice(0, 100));
+    res.status(201).json({ success: true, data: newNotif });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to save notification' });
+  }
+});
+
+app.patch('/api/notifications/mark-read', async (req, res) => {
+  try {
+    const { id, all, role, employeeId } = req.body;
+    let notifications = await readData(NOTIFICATIONS_FILE);
+    if (id) {
+      notifications = notifications.map((n) => (n.id === id ? { ...n, read: true } : n));
+    } else if (all) {
+      notifications = notifications.map((n) => {
+        const isTarget = role === 'hr'
+          ? n.targetRole === 'hr' || n.targetRole === 'all'
+          : n.targetRole === 'all' || n.targetEmployeeId === employeeId;
+        return isTarget ? { ...n, read: true } : n;
+      });
+    }
+    await writeData(NOTIFICATIONS_FILE, notifications);
+    res.json({ success: true, data: notifications });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Failed to update notifications' });
   }
 });
 

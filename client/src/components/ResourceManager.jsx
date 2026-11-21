@@ -97,7 +97,8 @@ export default function ResourceManager({
 
   const handleAllocateSubmit = async (e) => {
     e.preventDefault();
-    if (!targetProjectId) {
+    const projId = targetProjectId || projects[0]?.id;
+    if (!projId) {
       setError('Please select a project to assign');
       return;
     }
@@ -106,7 +107,7 @@ export default function ResourceManager({
     const empId = selectedEmpForAllocation.id;
 
     if (onAllocate) {
-      onAllocate(empId, targetProjectId, pct);
+      onAllocate(empId, projId, pct);
       setSelectedEmpForAllocation(null);
       return;
     }

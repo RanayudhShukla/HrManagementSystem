@@ -1,0 +1,34 @@
+[
+  {
+    "id": "NOTIF-101",
+    "title": "Task Completed",
+    "message": "Aarav Sharma completed sprint deliverable: \"Develop Biometric Attendance API & Redis Caching\".",
+    "type": "task_completed",
+    "targetRole": "hr",
+    "timestamp": "10:45 AM",
+    "read": false,
+    "createdAt": "2026-11-20T10:45:00.000Z"
+  },
+  {
+    "id": "NOTIF-102",
+    "title": "Project Assignment Update",
+    "message": "HR has assigned you to \"AI Workflow Automation Engine\" at 50% capacity.",
+    "type": "project_assigned",
+    "targetRole": "employee",
+    "targetEmployeeId": "EMP-1001",
+    "timestamp": "09:30 AM",
+    "read": false,
+    "createdAt": "2026-11-20T09:30:00.000Z"
+  },
+  {
+    "id": "NOTIF-103",
+    "title": "Leave Request Approved",
+    "message": "Your Paid Time Off request for 2 days has been approved by HR.",
+    "type": "leave_approved",
+    "targetRole": "employee",
+    "targetEmployeeId": "EMP-1001",
+    "timestamp": "Yesterday",
+    "read": true,
+    "createdAt": "2026-11-19T14:00:00.000Z"
+  }
+]

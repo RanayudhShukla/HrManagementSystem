@@ -87,9 +87,10 @@ export default function ProjectManager({
 
   const handleQuickStaffSubmit = (e) => {
     e.preventDefault();
-    if (!quickStaffingProjectId || !selectedStaffEmployeeId) return;
+    const empId = selectedStaffEmployeeId || employees[0]?.id;
+    if (!quickStaffingProjectId || !empId) return;
     if (onAllocate) {
-      onAllocate(selectedStaffEmployeeId, quickStaffingProjectId, parseInt(selectedStaffPercent, 10));
+      onAllocate(empId, quickStaffingProjectId, parseInt(selectedStaffPercent || '100', 10));
     }
     setQuickStaffingProjectId(null);
     setSelectedStaffEmployeeId('');

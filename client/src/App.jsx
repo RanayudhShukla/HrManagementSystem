@@ -13,7 +13,8 @@ import { SEED_EMPLOYEES, SEED_PROJECTS, SEED_LEAVES, SEED_TASKS, SEED_NOTIFICATI
 import { 
   syncEmployeeToFirestore, syncProjectToFirestore, 
   syncLeaveToFirestore, syncTaskToFirestore,
-  getFirestoreEmployees, getFirestoreProjects, getFirestoreLeaves 
+  getFirestoreEmployees, getFirestoreProjects, getFirestoreLeaves,
+  subscribeToFirestoreEmployees, subscribeToFirestoreProjects 
 } from './firebase/firestoreService';
 
 // Cross-tab / cross-window BroadcastChannel for instant real-time zero-refresh synchronization
@@ -145,21 +146,27 @@ export default function App() {
   };
 
   const addNotification = (notif) => {
+    const newNotifObj = {
+      id: `NOTIF-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      read: false,
+      createdAt: new Date().toISOString(),
+      ...notif,
+    };
     setNotifications((prev) => {
-      const updated = [
-        {
-          id: `NOTIF-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          read: false,
-          createdAt: new Date().toISOString(),
-          ...notif,
-        },
-        ...prev,
-      ];
+      const updated = [newNotifObj, ...prev];
       localStorage.setItem('cooperate_notifications', JSON.stringify(updated));
       broadcastSync({ notifications: updated });
       return updated;
     });
+
+    try {
+      fetch('/api/notifications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newNotifObj),
+      }).catch(() => {});
+    } catch {}
   };
 
   const handleMarkNotificationRead = (notifId) => {
@@ -655,7 +662,7 @@ export default function App() {
     showToast('Leave request submitted! HR has been notified.');
   };
 
-  // Triple-Layer Zero-Refresh Real-Time Sync Engine
+  // Quad-Layer Zero-Refresh Real-Time Sync Engine
   useEffect(() => {
     // Layer 1: Instant Cross-Tab/Window BroadcastChannel Listener
     const handleBroadcastMessage = (event) => {
@@ -688,64 +695,93 @@ export default function App() {
     };
     window.addEventListener('storage', handleStorageChange);
 
-    // Layer 3: High-Frequency Silent Heartbeat Poller (Every 1.5s)
-    // Guarantees zero-refresh updates even if tabs are backgrounded or across different browser windows
-    const syncInterval = setInterval(() => {
-      try {
-        const storedEmps = localStorage.getItem('pulsehr_employees');
-        if (storedEmps) {
-          const parsed = JSON.parse(storedEmps);
-          setEmployees((prev) => (JSON.stringify(prev) !== storedEmps ? parsed : prev));
-        }
-        const storedProjs = localStorage.getItem('pulsehr_projects');
-        if (storedProjs) {
-          const parsed = JSON.parse(storedProjs);
-          setProjects((prev) => (JSON.stringify(prev) !== storedProjs ? parsed : prev));
-        }
-        const storedLeaves = localStorage.getItem('pulsehr_leaves');
-        if (storedLeaves) {
-          const parsed = JSON.parse(storedLeaves);
-          setLeaves((prev) => (JSON.stringify(prev) !== storedLeaves ? parsed : prev));
-        }
-        const storedNotifs = localStorage.getItem('cooperate_notifications');
-        if (storedNotifs) {
-          const parsed = JSON.parse(storedNotifs);
-          setNotifications((prev) => (JSON.stringify(prev) !== storedNotifs ? parsed : prev));
-        }
-      } catch {}
-    }, 1500);
+    // Layer 3: Firestore Cloud Realtime Push Listeners
+    const unsubEmps = subscribeToFirestoreEmployees((cloudEmps) => {
+      if (cloudEmps && cloudEmps.length > 0) {
+        setEmployees(cloudEmps);
+        localStorage.setItem('pulsehr_employees', JSON.stringify(cloudEmps));
+      }
+    });
 
-    const syncCloudData = async () => {
+    const unsubProjs = subscribeToFirestoreProjects((cloudProjs) => {
+      if (cloudProjs && cloudProjs.length > 0) {
+        setProjects(cloudProjs);
+        localStorage.setItem('pulsehr_projects', JSON.stringify(cloudProjs));
+      }
+    });
+
+    // Layer 4: Live Server Active Poller (Every 1500ms)
+    // Synchronizes across separate browsers, incognito windows, phones, and devices with zero reload
+    const pollServer = async () => {
       try {
-        const [cloudEmps, cloudProjs, cloudLeaves] = await Promise.all([
-          getFirestoreEmployees().catch(() => null),
-          getFirestoreProjects().catch(() => null),
-          getFirestoreLeaves().catch(() => null),
+        const [empRes, projRes, leaveRes, notifRes] = await Promise.all([
+          fetch('/api/employees').then((r) => (r.ok ? r.json() : null)).catch(() => null),
+          fetch('/api/projects').then((r) => (r.ok ? r.json() : null)).catch(() => null),
+          fetch('/api/leaves').then((r) => (r.ok ? r.json() : null)).catch(() => null),
+          fetch('/api/notifications').then((r) => (r.ok ? r.json() : null)).catch(() => null),
         ]);
 
-        if (cloudEmps && cloudEmps.length > 0) {
-          setEmployees(cloudEmps);
-          localStorage.setItem('pulsehr_employees', JSON.stringify(cloudEmps));
+        if (empRes?.success && Array.isArray(empRes.data) && empRes.data.length > 0) {
+          setEmployees((prev) => {
+            const prevStr = JSON.stringify(prev);
+            const nextStr = JSON.stringify(empRes.data);
+            if (prevStr !== nextStr) {
+              localStorage.setItem('pulsehr_employees', nextStr);
+              return empRes.data;
+            }
+            return prev;
+          });
         }
-        if (cloudProjs && cloudProjs.length > 0) {
-          setProjects(cloudProjs);
-          localStorage.setItem('pulsehr_projects', JSON.stringify(cloudProjs));
+
+        if (projRes?.success && Array.isArray(projRes.data) && projRes.data.length > 0) {
+          setProjects((prev) => {
+            const prevStr = JSON.stringify(prev);
+            const nextStr = JSON.stringify(projRes.data);
+            if (prevStr !== nextStr) {
+              localStorage.setItem('pulsehr_projects', nextStr);
+              return projRes.data;
+            }
+            return prev;
+          });
         }
-        if (cloudLeaves && cloudLeaves.length > 0) {
-          setLeaves(cloudLeaves);
-          localStorage.setItem('pulsehr_leaves', JSON.stringify(cloudLeaves));
+
+        if (leaveRes?.success && Array.isArray(leaveRes.data) && leaveRes.data.length > 0) {
+          setLeaves((prev) => {
+            const prevStr = JSON.stringify(prev);
+            const nextStr = JSON.stringify(leaveRes.data);
+            if (prevStr !== nextStr) {
+              localStorage.setItem('pulsehr_leaves', nextStr);
+              return leaveRes.data;
+            }
+            return prev;
+          });
         }
-      } catch (e) {
-        console.warn('Initial cloud sync notice:', e);
-      }
+
+        if (notifRes?.success && Array.isArray(notifRes.data)) {
+          setNotifications((prev) => {
+            const prevStr = JSON.stringify(prev);
+            const nextStr = JSON.stringify(notifRes.data);
+            if (prevStr !== nextStr) {
+              localStorage.setItem('cooperate_notifications', nextStr);
+              return notifRes.data;
+            }
+            return prev;
+          });
+        }
+      } catch {}
     };
-    syncCloudData();
+
+    // Initial immediate fetch
+    pollServer();
+    const syncInterval = setInterval(pollServer, 1500);
 
     return () => {
       if (broadcastChannel) {
         broadcastChannel.removeEventListener('message', handleBroadcastMessage);
       }
       window.removeEventListener('storage', handleStorageChange);
+      if (typeof unsubEmps === 'function') unsubEmps();
+      if (typeof unsubProjs === 'function') unsubProjs();
       clearInterval(syncInterval);
     };
   }, []);
