@@ -548,8 +548,10 @@ app.get('*', (req, res, next) => {
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`PulseHR Enterprise Resource Manager running on http://localhost:${PORT}`);
-});
+if (require.main === module || !process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`PulseHR Enterprise Resource Manager running on http://localhost:${PORT}`);
+  });
+}
 
 module.exports = app;
