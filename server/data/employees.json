@@ -18,10 +18,10 @@
       "Performance"
     ],
     "workMode": "Hybrid (Bengaluru HQ)",
-    "allocationStatus": "Fully Booked",
-    "allocationPercent": 100,
-    "assignedProjectId": "PROJ-201",
-    "assignedProjectName": "BharatPay UPI & Banking Gateway",
+    "allocationStatus": "Partially Available",
+    "allocationPercent": 50,
+    "assignedProjectId": "PROJ-204",
+    "assignedProjectName": "AI Workflow Automation Engine",
     "leaveBalance": {
       "paid": 11,
       "sick": 6,

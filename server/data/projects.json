@@ -7,8 +7,16 @@
     "lead": "David Chen",
     "startDate": "2024-05-01",
     "deadline": "2026-12-30",
-    "requiredSkills": ["React", "TypeScript", "Node.js", "Security"],
-    "allocatedMembers": ["EMP-1001", "EMP-1005"],
+    "requiredSkills": [
+      "React",
+      "TypeScript",
+      "Node.js",
+      "Security"
+    ],
+    "allocatedMembers": [
+      "EMP-1001",
+      "EMP-1005"
+    ],
     "budget": "₹48,00,000",
     "priority": "High"
   },
@@ -20,8 +28,16 @@
     "lead": "Elena Rostova",
     "startDate": "2024-06-15",
     "deadline": "2027-01-20",
-    "requiredSkills": ["UI/UX", "React", "Node.js", "PostgreSQL"],
-    "allocatedMembers": ["EMP-1002", "EMP-1007"],
+    "requiredSkills": [
+      "UI/UX",
+      "React",
+      "Node.js",
+      "PostgreSQL"
+    ],
+    "allocatedMembers": [
+      "EMP-1002",
+      "EMP-1007"
+    ],
     "budget": "₹35,00,000",
     "priority": "Medium"
   },
@@ -33,8 +49,14 @@
     "lead": "Kavita Verma",
     "startDate": "2024-09-01",
     "deadline": "2026-12-31",
-    "requiredSkills": ["Talent Acquisition", "Onboarding", "Screening"],
-    "allocatedMembers": ["EMP-1004"],
+    "requiredSkills": [
+      "Talent Acquisition",
+      "Onboarding",
+      "Screening"
+    ],
+    "allocatedMembers": [
+      "EMP-1004"
+    ],
     "budget": "₹15,00,000",
     "priority": "High"
   },
@@ -46,8 +68,15 @@
     "lead": "Marcus Vance",
     "startDate": "2026-12-01",
     "deadline": "2027-04-15",
-    "requiredSkills": ["Python", "Docker", "DevOps", "Microservices"],
-    "allocatedMembers": [],
+    "requiredSkills": [
+      "Python",
+      "Docker",
+      "DevOps",
+      "Microservices"
+    ],
+    "allocatedMembers": [
+      "EMP-1001"
+    ],
     "budget": "₹55,00,000",
     "priority": "Urgent"
   }

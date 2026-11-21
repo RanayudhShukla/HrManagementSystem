@@ -175,13 +175,26 @@ app.post('/api/resources/allocate', async (req, res) => {
       return res.status(404).json({ success: false, message: 'Employee or Project not found' });
     }
 
+    // 1. Remove from previous project team if switching projects
+    const prevProjectId = emp.assignedProjectId;
+    if (prevProjectId && prevProjectId !== proj.id) {
+      const prevProj = projects.find((p) => p.id === prevProjectId);
+      if (prevProj && Array.isArray(prevProj.allocatedMembers)) {
+        prevProj.allocatedMembers = prevProj.allocatedMembers.filter((id) => id !== emp.id);
+      }
+    }
+
+    // 2. Update employee allocation
     const pct = parseInt(allocationPercent || 100, 10);
     emp.assignedProjectId = proj.id;
     emp.assignedProjectName = proj.name;
     emp.allocationPercent = pct;
     emp.allocationStatus = pct >= 100 ? 'Fully Booked' : pct > 0 ? 'Partially Available' : 'Available (Bench)';
 
-    // Add to project team if not already present
+    // 3. Add to new project team if not already present
+    if (!Array.isArray(proj.allocatedMembers)) {
+      proj.allocatedMembers = [];
+    }
     if (!proj.allocatedMembers.includes(emp.id)) {
       proj.allocatedMembers.push(emp.id);
     }
@@ -195,7 +208,8 @@ app.post('/api/resources/allocate', async (req, res) => {
       data: { employee: emp, project: proj },
     });
   } catch (err) {
-    res.status(500).json({ success: false, message: 'Failed to allocate resource' });
+    console.error('Error in allocate resource:', err);
+    res.status(500).json({ success: false, message: err.message || 'Failed to allocate resource' });
   }
 });
 
