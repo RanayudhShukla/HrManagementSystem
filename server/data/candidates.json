@@ -1,0 +1,74 @@
+[
+  {
+    "id": "cand-001",
+    "jobId": "job-1",
+    "jobTitle": "Senior Frontend Developer",
+    "fullName": "Aarav Sharma",
+    "email": "aarav.sharma@example.com",
+    "phone": "+91 98765 43210",
+    "experienceYears": 4.5,
+    "portfolioUrl": "https://github.com/aarav-dev",
+    "resumeName": "Aarav_Sharma_Resume.pdf",
+    "coverNote": "Experienced React developer with a strong focus on component libraries, Tailwind CSS, and performance optimization.",
+    "status": "Interview Scheduled",
+    "appliedAt": "2026-11-17T10:14:00.000Z",
+    "scheduledInterview": {
+      "slotId": "slot-101",
+      "date": "2026-11-21",
+      "timeSlot": "10:00 AM - 10:45 AM",
+      "interviewer": "Sarah Jenkins (Lead Tech Recruiter)",
+      "meetLink": "https://meet.google.com/abc-hire-flow"
+    }
+  },
+  {
+    "id": "cand-002",
+    "jobId": "job-3",
+    "jobTitle": "UI/UX Product Designer",
+    "fullName": "Elena Rostova",
+    "email": "elena.design@example.com",
+    "phone": "+1 555-234-8901",
+    "experienceYears": 3,
+    "portfolioUrl": "https://dribbble.com/elena-ui",
+    "resumeName": "Elena_Rostova_Design_Portfolio.pdf",
+    "coverNote": "Passionate about accessible UI systems and creating clean user workflows for B2B SaaS applications.",
+    "status": "Interview Scheduled",
+    "appliedAt": "2026-11-18T14:20:00.000Z",
+    "scheduledInterview": {
+      "slotId": "slot-104",
+      "date": "2026-11-22",
+      "timeSlot": "04:00 PM - 04:45 PM",
+      "interviewer": "Priya Nair (Design Lead)",
+      "meetLink": "https://meet.google.com/xyz-design-eval"
+    }
+  },
+  {
+    "id": "cand-003",
+    "jobId": "job-2",
+    "jobTitle": "Full Stack Software Engineer",
+    "fullName": "Marcus Vance",
+    "email": "marcus.vance@techmail.com",
+    "phone": "+1 555-671-0092",
+    "experienceYears": 3.5,
+    "portfolioUrl": "https://marcusvance.dev",
+    "resumeName": "Marcus_Vance_FullStack.pdf",
+    "coverNote": "Specialized in Node.js, Express microservices, and React SPAs. Looking for a high-growth engineering role.",
+    "status": "Screening",
+    "appliedAt": "2026-11-19T08:45:00.000Z",
+    "scheduledInterview": null
+  },
+  {
+    "id": "cand-004",
+    "jobId": "job-4",
+    "jobTitle": "Technical Recruiter & HR Specialist",
+    "fullName": "Kavita Verma",
+    "email": "kavita.v@workmail.org",
+    "phone": "+91 91234 56789",
+    "experienceYears": 2,
+    "portfolioUrl": "https://linkedin.com/in/kavita-recruiter",
+    "resumeName": "Kavita_Verma_HR.pdf",
+    "coverNote": "Full cycle tech recruiter with experience coordinating interview schedules and boosting candidate conversion rates.",
+    "status": "Offered",
+    "appliedAt": "2026-11-16T11:00:00.000Z",
+    "scheduledInterview": null
+  }
+]

@@ -1,0 +1,72 @@
+[
+  {
+    "id": "slot-101",
+    "date": "2026-11-21",
+    "timeSlot": "10:00 AM - 10:45 AM",
+    "interviewerName": "Sarah Jenkins (Lead Tech Recruiter)",
+    "interviewerRole": "Initial Technical Screen",
+    "isBooked": true,
+    "bookedBy": {
+      "candidateId": "cand-001",
+      "candidateName": "Aarav Sharma",
+      "appliedRole": "Senior Frontend Developer",
+      "candidateEmail": "aarav.sharma@example.com"
+    },
+    "meetLink": "https://meet.google.com/abc-hire-flow"
+  },
+  {
+    "id": "slot-102",
+    "date": "2026-11-21",
+    "timeSlot": "02:00 PM - 02:45 PM",
+    "interviewerName": "David Miller (Engineering Manager)",
+    "interviewerRole": "System Architecture & Coding",
+    "isBooked": false,
+    "bookedBy": null,
+    "meetLink": null
+  },
+  {
+    "id": "slot-103",
+    "date": "2026-11-22",
+    "timeSlot": "11:30 AM - 12:15 PM",
+    "interviewerName": "Sarah Jenkins (Lead Tech Recruiter)",
+    "interviewerRole": "Culture & HR Alignment",
+    "isBooked": false,
+    "bookedBy": null,
+    "meetLink": null
+  },
+  {
+    "id": "slot-104",
+    "date": "2026-11-22",
+    "timeSlot": "04:00 PM - 04:45 PM",
+    "interviewerName": "Priya Nair (Design Lead)",
+    "interviewerRole": "Portfolio & Design Challenge Review",
+    "isBooked": true,
+    "bookedBy": {
+      "candidateId": "cand-002",
+      "candidateName": "Elena Rostova",
+      "appliedRole": "UI/UX Product Designer",
+      "candidateEmail": "elena.design@example.com"
+    },
+    "meetLink": "https://meet.google.com/xyz-design-eval"
+  },
+  {
+    "id": "slot-105",
+    "date": "2026-11-23",
+    "timeSlot": "10:30 AM - 11:15 AM",
+    "interviewerName": "David Miller (Engineering Manager)",
+    "interviewerRole": "Technical Deep Dive",
+    "isBooked": false,
+    "bookedBy": null,
+    "meetLink": null
+  },
+  {
+    "id": "slot-106",
+    "date": "2026-11-23",
+    "timeSlot": "03:30 PM - 04:15 PM",
+    "interviewerName": "Sarah Jenkins (Lead Tech Recruiter)",
+    "interviewerRole": "HR Fit & Offer Discussion",
+    "isBooked": false,
+    "bookedBy": null,
+    "meetLink": null
+  }
+]

@@ -1,0 +1,146 @@
+[
+  {
+    "id": "prod-1",
+    "name": "Apex Pro Wireless Mechanical Keyboard",
+    "category": "Keyboards",
+    "price": 149.99,
+    "rating": 4.9,
+    "reviewsCount": 128,
+    "stock": 14,
+    "description": "Custom pre-lubed Gateron Yellow switches, sound-dampening silicone foam, hot-swappable PCB, and PBT double-shot keycaps in stealth charcoal finish.",
+    "image": "https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&w=800&q=80",
+    "features": [
+      "Hot-swappable 5-pin switches",
+      "Tri-mode: Bluetooth 5.1, 2.4Ghz, Type-C",
+      "Up to 200 hours battery life",
+      "RGB per-key illumination"
+    ],
+    "isFeatured": true
+  },
+  {
+    "id": "prod-2",
+    "name": "Lumina ScreenBar Pro Monitor Light",
+    "category": "Lighting",
+    "price": 79.99,
+    "rating": 4.8,
+    "reviewsCount": 94,
+    "stock": 22,
+    "description": "Zero screen glare asymmetrical optical design. Auto-dimming ambient sensor with wireless rotary touch dial for color temperature and brightness control.",
+    "image": "https://images.unsplash.com/photo-1593642632823-8f785ba67e45?auto=format&fit=crop&w=800&q=80",
+    "features": [
+      "Asymmetrical light path (No screen glare)",
+      "2700K - 6500K dynamic color temp",
+      "Wireless desktop control puck",
+      "USB-C powered"
+    ],
+    "isFeatured": true
+  },
+  {
+    "id": "prod-3",
+    "name": "ErgoGrid High-Back Mesh Task Chair",
+    "category": "Furniture",
+    "price": 389.00,
+    "rating": 4.9,
+    "reviewsCount": 210,
+    "stock": 4,
+    "description": "Engineered for 12+ hour coding sessions. 4D multidirectional armrests, responsive dynamic lumbar support, and breathable cooling elastomeric mesh.",
+    "image": "https://images.unsplash.com/photo-1580481077191-c672b1d3d623?auto=format&fit=crop&w=800&q=80",
+    "features": [
+      "Dynamic adaptive lumbar pivot",
+      "4D armrests with soft PU padding",
+      "135-degree recline with tilt lock",
+      "BIFMA-certified Class-4 gas lift"
+    ],
+    "isFeatured": true
+  },
+  {
+    "id": "prod-4",
+    "name": "Titan Heavy-Duty Gas Spring Dual Monitor Arm",
+    "category": "Desk Setup",
+    "price": 119.50,
+    "rating": 4.7,
+    "reviewsCount": 65,
+    "stock": 9,
+    "description": "Aircraft-grade aluminum dual monitor arm holding screens from 17\" to 35\" (up to 12kg each). Integrated quick-release VESA plates and cable channels.",
+    "image": "https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?auto=format&fit=crop&w=800&q=80",
+    "features": [
+      "Supports dual 35-inch ultrawides",
+      "Full 360-degree rotation and 90-degree tilt",
+      "Integrated internal cable channels",
+      "Desk clamp and grommet mounting included"
+    ],
+    "isFeatured": false
+  },
+  {
+    "id": "prod-5",
+    "name": "Merino Wool & Eco-Felt Desk Mat (90x40cm)",
+    "category": "Desk Setup",
+    "price": 39.99,
+    "rating": 4.8,
+    "reviewsCount": 182,
+    "stock": 35,
+    "description": "Natural thermal-insulated merino wool top with non-slip cork base. Protects your desk surface while providing ultra-smooth mouse glide.",
+    "image": "https://images.unsplash.com/photo-1616440347437-b1c73416efc2?auto=format&fit=crop&w=800&q=80",
+    "features": [
+      "100% natural organic wool & cork base",
+      "Anti-fray precision stitched edges",
+      "Water-resistant & easy to wipe clean",
+      "Fits full-size keyboard and mouse"
+    ],
+    "isFeatured": true
+  },
+  {
+    "id": "prod-6",
+    "name": "AuraWave ANC Studio Wireless Headphones",
+    "category": "Audio",
+    "price": 229.00,
+    "rating": 4.9,
+    "reviewsCount": 305,
+    "stock": 7,
+    "description": "Hybrid active noise cancellation with 40mm beryllium drivers. Tuned for deep focus, crisp calls, and immersive coding music with low latency.",
+    "image": "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=800&q=80",
+    "features": [
+      "-40dB Hybrid Active Noise Cancellation",
+      "Multipoint pairing (switch laptop & phone)",
+      "45-hour continuous battery life",
+      "ClearVoice quad-microphone array"
+    ],
+    "isFeatured": true
+  },
+  {
+    "id": "prod-7",
+    "name": "Walnut Hardwood Ergonomic Keyboard Wrist Rest",
+    "category": "Accessories",
+    "price": 29.99,
+    "rating": 4.7,
+    "reviewsCount": 87,
+    "stock": 18,
+    "description": "Solid American Walnut wood cut with a gentle 8-degree slope to prevent carpal tunnel strain during long coding sprints. Finished with natural beeswax.",
+    "image": "https://images.unsplash.com/photo-1595225476474-87563907a212?auto=format&fit=crop&w=800&q=80",
+    "features": [
+      "100% Solid sustainably sourced Walnut",
+      "Ergonomic 8-degree incline angle",
+      "Anti-skid rubber feet embedded",
+      "Smooth beeswax matte seal"
+    ],
+    "isFeatured": false
+  },
+  {
+    "id": "prod-8",
+    "name": "VoltFlow 100W GaN Desktop Charging Station",
+    "category": "Accessories",
+    "price": 54.99,
+    "rating": 4.9,
+    "reviewsCount": 142,
+    "stock": 2,
+    "description": "Compact Gallium Nitride (GaN III) high-speed desktop power hub. Fast charges your MacBook Pro, iPhone, and accessories simultaneously without heat.",
+    "image": "https://images.unsplash.com/photo-1583863788434-e58a36330cf0?auto=format&fit=crop&w=800&q=80",
+    "features": [
+      "100W Max USB-C Power Delivery",
+      "3x USB-C ports + 1x USB-A port",
+      "GaN III cooling architecture",
+      "Overcurrent & short-circuit protection"
+    ],
+    "isFeatured": false
+  }
+]

@@ -1,0 +1,91 @@
+[
+  {
+    "id": "job-1",
+    "title": "Senior Frontend Developer",
+    "department": "Engineering",
+    "location": "Remote / Bengaluru",
+    "type": "Full-Time",
+    "experience": "3 - 5 Years",
+    "salary": "$85,000 - $110,000 / yr",
+    "description": "Lead the architectural decisions for our core web portal using React, TypeScript, and modern state management. Work closely with product designers to craft delightful UX.",
+    "requirements": [
+      "3+ years experience with React and modern JavaScript/TypeScript",
+      "Proficient with Tailwind CSS or CSS-in-JS and responsive design",
+      "Experience with RESTful APIs, state machines, and web performance optimization",
+      "Strong debugging and automated testing skills"
+    ],
+    "openings": 2,
+    "postedDate": "2026-11-15"
+  },
+  {
+    "id": "job-2",
+    "title": "Full Stack Software Engineer",
+    "department": "Engineering",
+    "location": "Remote / Hyderabad",
+    "type": "Full-Time",
+    "experience": "2 - 4 Years",
+    "salary": "$75,000 - $95,000 / yr",
+    "description": "Design, build, and maintain high-throughput backend APIs and customer-facing interfaces using Node.js, Express, React, and SQL/NoSQL databases.",
+    "requirements": [
+      "Strong hands-on experience in Node.js, Express, and REST APIs",
+      "Solid understanding of relational and document database architectures",
+      "Familiarity with containerization (Docker) and CI/CD pipelines",
+      "Excellent problem-solving and communication skills"
+    ],
+    "openings": 3,
+    "postedDate": "2026-11-16"
+  },
+  {
+    "id": "job-3",
+    "title": "UI/UX Product Designer",
+    "department": "Design",
+    "location": "Hybrid / Mumbai",
+    "type": "Full-Time",
+    "experience": "2 - 5 Years",
+    "salary": "$65,000 - $85,000 / yr",
+    "description": "Shape the visual and interaction design systems for our enterprise suite. Build interactive prototypes, conduct user research, and collaborate with engineering teams.",
+    "requirements": [
+      "Expertise in Figma, design systems, and rapid prototyping",
+      "Portfolio showcasing end-to-end UX case studies and wireframes",
+      "Deep understanding of design accessibility (WCAG 2.1)",
+      "Strong storytelling and cross-functional leadership"
+    ],
+    "openings": 1,
+    "postedDate": "2026-11-17"
+  },
+  {
+    "id": "job-4",
+    "title": "Technical Recruiter & HR Specialist",
+    "department": "HR & Operations",
+    "location": "Remote / New Delhi",
+    "type": "Full-Time",
+    "experience": "1 - 3 Years",
+    "salary": "$50,000 - $68,000 / yr",
+    "description": "Manage our full-cycle recruitment pipeline. Coordinate candidate screening, interviewer availability, candidate experience, and onboarding workflows.",
+    "requirements": [
+      "1+ years experience in technical talent sourcing and screening",
+      "Familiarity with ATS software and recruitment scheduling tools",
+      "Superb interpersonal, scheduling, and stakeholder management skills",
+      "Knowledge of labor regulations and HR compliance"
+    ],
+    "openings": 2,
+    "postedDate": "2026-11-18"
+  },
+  {
+    "id": "job-5",
+    "title": "Associate Product Manager",
+    "department": "Product",
+    "location": "Remote / Pune",
+    "type": "Full-Time",
+    "experience": "1 - 3 Years",
+    "salary": "$60,000 - $80,000 / yr",
+    "description": "Bridge customer feedback, engineering roadmap, and executive vision to ship impactful features. Define PRDs, user stories, and track product adoption metrics.",
+    "requirements": [
+      "Experience writing clear product requirements and user stories",
+      "Analytical mindset with familiarity in product analytics tools",
+      "Passion for agile methodologies and cross-team alignment"
+    ],
+    "openings": 1,
+    "postedDate": "2026-11-19"
+  }
+]

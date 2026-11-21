@@ -1,0 +1,54 @@
+[
+  {
+    "id": "PROJ-201",
+    "name": "BharatPay UPI & Banking Gateway",
+    "client": "BharatPay India Financial Technologies",
+    "status": "In Progress",
+    "lead": "David Chen",
+    "startDate": "2024-05-01",
+    "deadline": "2026-12-30",
+    "requiredSkills": ["React", "TypeScript", "Node.js", "Security"],
+    "allocatedMembers": ["EMP-1001", "EMP-1005"],
+    "budget": "₹48,00,000",
+    "priority": "High"
+  },
+  {
+    "id": "PROJ-202",
+    "name": "Vortex Cloud Analytics Platform",
+    "client": "Tata Digital Analytics Ltd.",
+    "status": "In Progress",
+    "lead": "Elena Rostova",
+    "startDate": "2024-06-15",
+    "deadline": "2027-01-20",
+    "requiredSkills": ["UI/UX", "React", "Node.js", "PostgreSQL"],
+    "allocatedMembers": ["EMP-1002", "EMP-1007"],
+    "budget": "₹35,00,000",
+    "priority": "Medium"
+  },
+  {
+    "id": "PROJ-203",
+    "name": "Q4 India Tech Hiring Ramp",
+    "client": "Internal HR Operations (India)",
+    "status": "In Progress",
+    "lead": "Kavita Verma",
+    "startDate": "2024-09-01",
+    "deadline": "2026-12-31",
+    "requiredSkills": ["Talent Acquisition", "Onboarding", "Screening"],
+    "allocatedMembers": ["EMP-1004"],
+    "budget": "₹15,00,000",
+    "priority": "High"
+  },
+  {
+    "id": "PROJ-204",
+    "name": "AI Workflow Automation Engine",
+    "client": "Reliance Jio Healthcare Systems",
+    "status": "Planning",
+    "lead": "Marcus Vance",
+    "startDate": "2026-12-01",
+    "deadline": "2027-04-15",
+    "requiredSkills": ["Python", "Docker", "DevOps", "Microservices"],
+    "allocatedMembers": [],
+    "budget": "₹55,00,000",
+    "priority": "Urgent"
+  }
+]

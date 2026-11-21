@@ -1,0 +1,203 @@
+[
+  {
+    "id": "EMP-1001",
+    "name": "Aarav Sharma",
+    "email": "aarav.sharma@pulsehr.com",
+    "phone": "+91 98765 43210",
+    "department": "Engineering",
+    "role": "Lead Frontend Architect",
+    "type": "Full-Time",
+    "status": "Active",
+    "joiningDate": "2023-03-15",
+    "salary": "₹18,50,000 / yr",
+    "skills": [
+      "React",
+      "TypeScript",
+      "Tailwind CSS",
+      "Next.js",
+      "Performance"
+    ],
+    "workMode": "Hybrid (Bengaluru HQ)",
+    "allocationStatus": "Fully Booked",
+    "allocationPercent": 100,
+    "assignedProjectId": "PROJ-201",
+    "assignedProjectName": "BharatPay UPI & Banking Gateway",
+    "leaveBalance": {
+      "paid": 11,
+      "sick": 6,
+      "casual": 4
+    }
+  },
+  {
+    "id": "EMP-1002",
+    "name": "Elena Rostova",
+    "email": "elena.r@pulsehr.com",
+    "phone": "+91 98112 33445",
+    "department": "Design",
+    "role": "Principal UI/UX Designer",
+    "type": "Full-Time",
+    "status": "Active",
+    "joiningDate": "2023-07-01",
+    "salary": "₹15,00,000 / yr",
+    "skills": [
+      "Figma",
+      "Design Systems",
+      "User Research",
+      "Wireframing"
+    ],
+    "workMode": "Remote (Mumbai)",
+    "allocationStatus": "Partially Available",
+    "allocationPercent": 50,
+    "assignedProjectId": "PROJ-202",
+    "assignedProjectName": "Vortex Cloud Analytics Platform",
+    "leaveBalance": {
+      "paid": 16,
+      "sick": 7,
+      "casual": 5
+    }
+  },
+  {
+    "id": "EMP-1003",
+    "name": "Marcus Vance",
+    "email": "marcus.v@pulsehr.com",
+    "phone": "+91 99223 88122",
+    "department": "Engineering",
+    "role": "Senior Backend Engineer",
+    "type": "Full-Time",
+    "status": "Active",
+    "joiningDate": "2024-01-10",
+    "salary": "₹16,80,000 / yr",
+    "skills": [
+      "Node.js",
+      "Express",
+      "PostgreSQL",
+      "Docker",
+      "Redis"
+    ],
+    "workMode": "In-Office (Hyderabad)",
+    "allocationStatus": "Available (Bench)",
+    "allocationPercent": 0,
+    "assignedProjectId": null,
+    "assignedProjectName": "Unassigned (Available for new project)",
+    "leaveBalance": {
+      "paid": 18,
+      "sick": 8,
+      "casual": 5
+    }
+  },
+  {
+    "id": "EMP-1004",
+    "name": "Kavita Verma",
+    "email": "kavita.v@pulsehr.com",
+    "phone": "+91 91234 56789",
+    "department": "HR & Operations",
+    "role": "Senior Talent Acquisition Manager",
+    "type": "Full-Time",
+    "status": "Active",
+    "joiningDate": "2022-11-20",
+    "salary": "₹12,50,000 / yr",
+    "skills": [
+      "Workforce Planning",
+      "ATS",
+      "Onboarding",
+      "Employee Relations"
+    ],
+    "workMode": "Hybrid (Bengaluru HQ)",
+    "allocationStatus": "Fully Booked",
+    "allocationPercent": 100,
+    "assignedProjectId": "PROJ-203",
+    "assignedProjectName": "Q4 India Tech Hiring Ramp",
+    "leaveBalance": {
+      "paid": 12,
+      "sick": 5,
+      "casual": 3
+    }
+  },
+  {
+    "id": "EMP-1005",
+    "name": "David Chen",
+    "email": "david.chen@pulsehr.com",
+    "phone": "+91 97788 11223",
+    "department": "Product",
+    "role": "Senior Technical Product Manager",
+    "type": "Full-Time",
+    "status": "Active",
+    "joiningDate": "2023-09-12",
+    "salary": "₹22,00,000 / yr",
+    "skills": [
+      "Product Strategy",
+      "Agile",
+      "Roadmapping",
+      "SQL",
+      "Jira"
+    ],
+    "workMode": "Remote (Pune)",
+    "allocationStatus": "Fully Booked",
+    "allocationPercent": 100,
+    "assignedProjectId": "PROJ-201",
+    "assignedProjectName": "BharatPay UPI & Banking Gateway",
+    "leaveBalance": {
+      "paid": 15,
+      "sick": 6,
+      "casual": 4
+    }
+  },
+  {
+    "id": "EMP-1006",
+    "name": "Sarah Miller",
+    "email": "sarah.m@pulsehr.com",
+    "phone": "+91 96655 44332",
+    "department": "Engineering",
+    "role": "Cloud DevOps Engineer",
+    "type": "Full-Time",
+    "status": "Active",
+    "joiningDate": "2024-04-18",
+    "salary": "₹17,00,000 / yr",
+    "skills": [
+      "AWS",
+      "Kubernetes",
+      "Terraform",
+      "CI/CD",
+      "Linux"
+    ],
+    "workMode": "Remote (Gurugram)",
+    "allocationStatus": "Available (Bench)",
+    "allocationPercent": 0,
+    "assignedProjectId": null,
+    "assignedProjectName": "Unassigned (Available for new project)",
+    "leaveBalance": {
+      "paid": 20,
+      "sick": 8,
+      "casual": 5
+    }
+  },
+  {
+    "id": "EMP-1007",
+    "name": "Vikram Malhotra",
+    "email": "vikram.m@pulsehr.com",
+    "phone": "+91 99887 76655",
+    "department": "Engineering",
+    "role": "Full-Stack Software Engineer",
+    "type": "Full-Time",
+    "status": "Active",
+    "joiningDate": "2024-02-01",
+    "salary": "₹14,00,000 / yr",
+    "skills": [
+      "React",
+      "Node.js",
+      "MongoDB",
+      "Express",
+      "Git"
+    ],
+    "workMode": "Hybrid (Bengaluru HQ)",
+    "allocationStatus": "Partially Available",
+    "allocationPercent": 50,
+    "assignedProjectId": "PROJ-202",
+    "assignedProjectName": "Vortex Cloud Analytics Platform",
+    "leaveBalance": {
+      "paid": 17,
+      "sick": 7,
+      "casual": 5
+    }
+  }
+]

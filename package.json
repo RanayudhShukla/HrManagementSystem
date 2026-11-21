@@ -1,0 +1,21 @@
+{
+  "name": "pulsehr-enterprise-suite",
+  "version": "1.0.0",
+  "description": "PulseHR - Enterprise HR Resource Manager & Workforce Intelligence Portal",
+  "main": "server/server.js",
+  "scripts": {
+    "dev": "concurrently \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
+    "client": "npm run dev --prefix client",
+    "server": "npm run dev --prefix server",
+    "build": "npm run build --prefix client",
+    "start": "node server/server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "morgan": "^1.10.0"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

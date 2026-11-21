@@ -1,0 +1,17 @@
+[
+  {
+    "code": "DEV10",
+    "discountPercent": 10,
+    "description": "10% off for fellow developers"
+  },
+  {
+    "code": "APEX20",
+    "discountPercent": 20,
+    "description": "20% off launch discount"
+  },
+  {
+    "code": "INTERN50",
+    "discountPercent": 50,
+    "description": "50% off special evaluator pass"
+  }
+]

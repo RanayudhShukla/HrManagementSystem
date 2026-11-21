@@ -1,0 +1,41 @@
+[
+  {
+    "id": "LEV-401",
+    "employeeId": "EMP-1001",
+    "employeeName": "Aarav Sharma",
+    "department": "Engineering",
+    "leaveType": "Paid Time Off",
+    "startDate": "2026-11-25",
+    "endDate": "2026-11-27",
+    "daysCount": 3,
+    "reason": "Family function and travel to hometown.",
+    "status": "Approved",
+    "appliedOn": "2026-11-19T14:30:00.000Z"
+  },
+  {
+    "id": "LEV-402",
+    "employeeId": "EMP-1003",
+    "employeeName": "Marcus Vance",
+    "department": "Engineering",
+    "leaveType": "Sick Leave",
+    "startDate": "2026-11-21",
+    "endDate": "2026-11-21",
+    "daysCount": 1,
+    "reason": "Dental appointment and recovery.",
+    "status": "Pending",
+    "appliedOn": "2026-11-20T09:15:00.000Z"
+  },
+  {
+    "id": "LEV-403",
+    "employeeId": "EMP-1002",
+    "employeeName": "Elena Rostova",
+    "department": "Design",
+    "leaveType": "Casual Leave",
+    "startDate": "2026-11-14",
+    "endDate": "2026-11-15",
+    "daysCount": 2,
+    "reason": "Personal errands and medical checkup.",
+    "status": "Approved",
+    "appliedOn": "2026-11-10T11:00:00.000Z"
+  }
+]

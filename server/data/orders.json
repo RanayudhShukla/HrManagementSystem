@@ -1,0 +1,64 @@
+[
+  {
+    "id": "ORD-98214",
+    "createdAt": "2026-11-18T14:32:00.000Z",
+    "customer": {
+      "fullName": "Alex Mercer",
+      "email": "alex.mercer@devmail.com",
+      "phone": "+1 555-019-2834",
+      "address": "42 Tech Boulevard, Suite 300",
+      "city": "Austin",
+      "postalCode": "78701",
+      "country": "United States"
+    },
+    "items": [
+      {
+        "id": "prod-1",
+        "name": "Apex Pro Wireless Mechanical Keyboard",
+        "price": 149.99,
+        "quantity": 1
+      },
+      {
+        "id": "prod-5",
+        "name": "Merino Wool & Eco-Felt Desk Mat (90x40cm)",
+        "price": 39.99,
+        "quantity": 1
+      }
+    ],
+    "subtotal": 189.98,
+    "discount": 18.99,
+    "shipping": 0.00,
+    "total": 170.99,
+    "couponCode": "DEV10",
+    "paymentMethod": "Credit Card (Simulated)",
+    "status": "Delivered"
+  },
+  {
+    "id": "ORD-98215",
+    "createdAt": "2026-11-19T09:15:00.000Z",
+    "customer": {
+      "fullName": "Sophia Chen",
+      "email": "sophia.code@gmail.com",
+      "phone": "+1 555-482-9912",
+      "address": "120 Silicon Way",
+      "city": "San Francisco",
+      "postalCode": "94107",
+      "country": "United States"
+    },
+    "items": [
+      {
+        "id": "prod-6",
+        "name": "AuraWave ANC Studio Wireless Headphones",
+        "price": 229.00,
+        "quantity": 1
+      }
+    ],
+    "subtotal": 229.00,
+    "discount": 0.00,
+    "shipping": 0.00,
+    "total": 229.00,
+    "couponCode": null,
+    "paymentMethod": "Apple Pay (Simulated)",
+    "status": "Processing"
+  }
+]
