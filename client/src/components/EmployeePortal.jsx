@@ -6,6 +6,9 @@ import {
   Award, FileText, ChevronRight, Filter
 } from 'lucide-react';
 import { SEED_TASKS } from '../data/seedData';
+import { 
+  getFirestoreTasks, subscribeToFirestoreTasks, syncTaskToFirestore, deleteTaskFromFirestore 
+} from '../firebase/firestoreService';
 
 export default function EmployeePortal({
   employee,
@@ -79,27 +82,34 @@ export default function EmployeePortal({
     { date: '2026-12-25', day: 'Friday', name: 'Christmas Day', type: 'Gazetted Holiday', mandatory: true },
   ];
 
-  // Fetch employee tasks from server with offline fallback
+  // Fetch employee tasks from Firestore and server with offline fallback
   const fetchTasks = async () => {
     if (!employee?.id) return;
     setTasksLoading(true);
 
-    let serverTasks = null;
+    let fetched = null;
     try {
-      const res = await fetch(`/api/tasks?employeeId=${employee.id}`).catch(() => null);
-      if (res && res.ok) {
-        const data = await res.json();
-        if (data.success && Array.isArray(data.data)) {
-          serverTasks = data.data;
-        }
+      const cloudTasks = await getFirestoreTasks(employee.id);
+      if (Array.isArray(cloudTasks) && cloudTasks.length > 0) {
+        fetched = cloudTasks;
       }
-    } catch (err) {
-      console.warn('API tasks unreachable, using client cache', err);
+    } catch {}
+
+    if (!fetched) {
+      try {
+        const res = await fetch(`/api/tasks?employeeId=${employee.id}`).catch(() => null);
+        if (res && res.ok) {
+          const data = await res.json();
+          if (data.success && Array.isArray(data.data)) {
+            fetched = data.data;
+          }
+        }
+      } catch {}
     }
 
-    if (serverTasks) {
-      setTasks(serverTasks);
-      localStorage.setItem(`pulsehr_tasks_${employee.id}`, JSON.stringify(serverTasks));
+    if (fetched) {
+      setTasks(fetched);
+      localStorage.setItem(`pulsehr_tasks_${employee.id}`, JSON.stringify(fetched));
     } else {
       const cached = localStorage.getItem(`pulsehr_tasks_${employee.id}`);
       if (cached) {
@@ -114,6 +124,18 @@ export default function EmployeePortal({
 
   useEffect(() => {
     fetchTasks();
+    if (!employee?.id) return;
+
+    // Real-time listener for tasks in Firestore
+    const unsub = subscribeToFirestoreTasks(employee.id, (cloudTasks) => {
+      if (Array.isArray(cloudTasks)) {
+        setTasks(cloudTasks);
+        localStorage.setItem(`pulsehr_tasks_${employee.id}`, JSON.stringify(cloudTasks));
+        setTasksLoading(false);
+      }
+    });
+
+    return () => unsub();
   }, [employee?.id]);
 
   if (!employee) {
@@ -131,9 +153,11 @@ export default function EmployeePortal({
     const nextStatus = task.status === 'Completed' ? 'In Progress' : 'Completed';
     setUpdatingTaskId(task.id);
 
+    const updatedTask = { ...task, status: nextStatus };
+
     // Optimistic UI update
     setTasks((prev) => {
-      const updated = prev.map((t) => (t.id === task.id ? { ...t, status: nextStatus } : t));
+      const updated = prev.map((t) => (t.id === task.id ? updatedTask : t));
       localStorage.setItem(`pulsehr_tasks_${employee.id}`, JSON.stringify(updated));
       return updated;
     });
@@ -141,6 +165,9 @@ export default function EmployeePortal({
     if (nextStatus === 'Completed' && onTaskCompleted) {
       onTaskCompleted(task, employee.name);
     }
+
+    // Sync to Firestore Cloud Database
+    syncTaskToFirestore(updatedTask);
 
     try {
       await fetch(`/api/tasks/${task.id}/status`, {
@@ -184,6 +211,9 @@ export default function EmployeePortal({
       estimatedHours: '8 hrs',
       category: 'Feature Development'
     });
+
+    // Sync to Firestore Cloud Database
+    syncTaskToFirestore(createdTask);
 
     try {
       await fetch('/api/tasks', {

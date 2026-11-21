@@ -8,13 +8,16 @@ import ProjectManager from './components/ProjectManager';
 import LeaveManager from './components/LeaveManager';
 import EmployeePortal from './components/EmployeePortal';
 import LoginPage from './components/LoginPage';
+import FirebaseModal from './components/FirebaseModal';
 import { Check, AlertCircle } from 'lucide-react';
 import { SEED_EMPLOYEES, SEED_PROJECTS, SEED_LEAVES, SEED_TASKS, SEED_NOTIFICATIONS } from './data/seedData';
 import { 
   syncEmployeeToFirestore, syncProjectToFirestore, 
   syncLeaveToFirestore, syncTaskToFirestore,
+  deleteEmployeeFromFirestore, deleteProjectFromFirestore, deleteLeaveFromFirestore,
   getFirestoreEmployees, getFirestoreProjects, getFirestoreLeaves,
-  subscribeToFirestoreEmployees, subscribeToFirestoreProjects 
+  subscribeToFirestoreEmployees, subscribeToFirestoreProjects, subscribeToFirestoreLeaves,
+  seedFirestoreWithData 
 } from './firebase/firestoreService';
 
 // Cross-tab / cross-window BroadcastChannel for instant real-time zero-refresh synchronization
@@ -189,6 +192,8 @@ export default function App() {
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [toast, setToast] = useState('');
+  const [showFirebaseModal, setShowFirebaseModal] = useState(false);
+  const [firestoreConnected, setFirestoreConnected] = useState(false);
 
   // Two-way Connected Notification System
   const [notifications, setNotifications] = useState(() => {
@@ -480,6 +485,7 @@ export default function App() {
     broadcastSync({ employees: updatedEmployees });
     showToast('Employee offboarded from company directory.');
 
+    deleteEmployeeFromFirestore(employeeId);
     try {
       await fetch(`/api/employees/${employeeId}`, { method: 'DELETE' });
     } catch {}
@@ -724,6 +730,120 @@ export default function App() {
     showToast('Leave request submitted! HR has been notified.');
   };
 
+  // Layer 0: Google Cloud Firebase Firestore Live Two-Way Sync Engine
+  useEffect(() => {
+    let unsubEmps = () => {};
+    let unsubProjs = () => {};
+    let unsubLeaves = () => {};
+
+    const initCloudFirestore = async () => {
+      try {
+        const [cloudEmps, cloudProjs, cloudLeaves] = await Promise.all([
+          getFirestoreEmployees(),
+          getFirestoreProjects(),
+          getFirestoreLeaves(),
+        ]);
+
+        // If Firestore projects collection is empty, seed initial corporate projects
+        if (Array.isArray(cloudProjs) && cloudProjs.length === 0) {
+          await seedFirestoreWithData([], SEED_PROJECTS, []);
+          setProjects(SEED_PROJECTS);
+          localStorage.setItem('pulsehr_projects', JSON.stringify(SEED_PROJECTS));
+        } else if (Array.isArray(cloudProjs) && cloudProjs.length > 0) {
+          setProjects(cloudProjs);
+          localStorage.setItem('pulsehr_projects', JSON.stringify(cloudProjs));
+        }
+
+        // If Firestore has employees, sync them to local state & storage
+        if (Array.isArray(cloudEmps) && cloudEmps.length > 0) {
+          const validEmps = cloudEmps
+            .filter((e) => !DEMO_EMPLOYEE_IDS.has(e.id) && !DEMO_NAMES.has(e.name))
+            .map((e) => ({
+              ...e,
+              allocationStatus: e.allocationStatus || 'Available (Bench)',
+              allocationPercent: typeof e.allocationPercent === 'number' ? e.allocationPercent : 0,
+              skills: Array.isArray(e.skills)
+                ? e.skills
+                : typeof e.skills === 'string'
+                ? e.skills.split(',').map((s) => s.trim()).filter(Boolean)
+                : ['General'],
+              leaveBalance: e.leaveBalance || { paid: 18, sick: 8, casual: 5 },
+            }));
+          setEmployees(validEmps);
+          localStorage.setItem('pulsehr_employees', JSON.stringify(validEmps));
+        } else {
+          // If Firestore is empty but we have local employees, push them up to Firestore
+          const localEmps = localStorage.getItem('pulsehr_employees');
+          if (localEmps) {
+            try {
+              const parsed = JSON.parse(localEmps);
+              const valid = (Array.isArray(parsed) ? parsed : []).filter((e) => !DEMO_EMPLOYEE_IDS.has(e.id) && !DEMO_NAMES.has(e.name));
+              for (const emp of valid) {
+                await syncEmployeeToFirestore(emp);
+              }
+            } catch {}
+          }
+        }
+
+        if (Array.isArray(cloudLeaves) && cloudLeaves.length > 0) {
+          const validLeaves = cloudLeaves.filter((l) => !DEMO_EMPLOYEE_IDS.has(l.employeeId));
+          setLeaves(validLeaves);
+          localStorage.setItem('pulsehr_leaves', JSON.stringify(validLeaves));
+        }
+
+        setFirestoreConnected(true);
+
+        // Realtime listener for employees in Firestore
+        unsubEmps = subscribeToFirestoreEmployees((cloudEmps) => {
+          if (Array.isArray(cloudEmps)) {
+            const validEmps = cloudEmps
+              .filter((e) => !DEMO_EMPLOYEE_IDS.has(e.id) && !DEMO_NAMES.has(e.name))
+              .map((e) => ({
+                ...e,
+                allocationStatus: e.allocationStatus || 'Available (Bench)',
+                allocationPercent: typeof e.allocationPercent === 'number' ? e.allocationPercent : 0,
+                skills: Array.isArray(e.skills)
+                  ? e.skills
+                  : typeof e.skills === 'string'
+                  ? e.skills.split(',').map((s) => s.trim()).filter(Boolean)
+                  : ['General'],
+                leaveBalance: e.leaveBalance || { paid: 18, sick: 8, casual: 5 },
+              }));
+            setEmployees(validEmps);
+            localStorage.setItem('pulsehr_employees', JSON.stringify(validEmps));
+          }
+        });
+
+        // Realtime listener for projects in Firestore
+        unsubProjs = subscribeToFirestoreProjects((cloudProjs) => {
+          if (Array.isArray(cloudProjs) && cloudProjs.length > 0) {
+            setProjects(cloudProjs);
+            localStorage.setItem('pulsehr_projects', JSON.stringify(cloudProjs));
+          }
+        });
+
+        // Realtime listener for leaves in Firestore
+        unsubLeaves = subscribeToFirestoreLeaves((cloudLeaves) => {
+          if (Array.isArray(cloudLeaves)) {
+            const validLeaves = cloudLeaves.filter((l) => !DEMO_EMPLOYEE_IDS.has(l.employeeId));
+            setLeaves(validLeaves);
+            localStorage.setItem('pulsehr_leaves', JSON.stringify(validLeaves));
+          }
+        });
+      } catch (err) {
+        console.warn('Firestore initialization notice:', err);
+      }
+    };
+
+    initCloudFirestore();
+
+    return () => {
+      unsubEmps();
+      unsubProjs();
+      unsubLeaves();
+    };
+  }, []);
+
   // Dual-Layer Zero-Refresh Real-Time Sync Engine (Tabs & Windows)
   useEffect(() => {
     // Layer 1: Instant Cross-Tab/Window BroadcastChannel Listener
@@ -871,6 +991,8 @@ export default function App() {
           onMarkAllRead={handleMarkAllNotificationsRead}
           onClearAll={handleClearNotifications}
           employees={employees}
+          onOpenFirebaseModal={() => setShowFirebaseModal(true)}
+          firestoreConnected={firestoreConnected}
         />
 
         {/* Main Content */}
@@ -941,6 +1063,16 @@ export default function App() {
           )}
         </main>
       </div>
+
+      {/* Google Cloud Firebase Cloud Firestore Database Modal */}
+      <FirebaseModal
+        isOpen={showFirebaseModal}
+        onClose={() => setShowFirebaseModal(false)}
+        employees={employees}
+        projects={projects}
+        leaves={leaves}
+        onNotify={showToast}
+      />
     </div>
   );
 }

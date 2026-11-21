@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { 
   Search, Bell, Settings, LogOut, CheckCircle2, 
-  Briefcase, CalendarCheck, AlertCircle, Check, Trash2, X 
+  Briefcase, CalendarCheck, AlertCircle, Check, Trash2, X, Cloud, Database 
 } from 'lucide-react';
 
 export default function Header({
@@ -14,6 +14,8 @@ export default function Header({
   onMarkAllRead,
   onClearAll,
   employees = [],
+  onOpenFirebaseModal,
+  firestoreConnected = false,
 }) {
   const isHR = currentUser?.role === 'hr';
   const employeeId = currentUser?.employee?.id;
@@ -75,7 +77,18 @@ export default function Header({
       </div>
 
       {/* Right Controls */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3 sm:gap-4">
+        {/* Real-time Google Cloud Firestore Live Badge & Modal Trigger */}
+        <button
+          onClick={onOpenFirebaseModal}
+          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-amber-50/80 hover:bg-amber-100/90 border border-amber-200/80 text-amber-900 text-xs font-semibold transition active:scale-95 shadow-xs"
+          title="Google Cloud Firestore (hrsystem-b0734) - Click to inspect live database"
+        >
+          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+          <Cloud className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+          <span className="hidden sm:inline font-mono text-[11px] font-bold">Firestore Sync</span>
+        </button>
+
         {/* Team Avatars Group */}
         <div className="hidden lg:flex items-center -space-x-2">
           {employees.slice(0, 4).map((emp, i) => (

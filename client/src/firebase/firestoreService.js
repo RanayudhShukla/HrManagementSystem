@@ -1,5 +1,5 @@
 import { 
-  collection, doc, getDocs, setDoc, addDoc, updateDoc, deleteDoc, onSnapshot 
+  collection, doc, getDocs, setDoc, addDoc, updateDoc, deleteDoc, onSnapshot, query, where 
 } from 'firebase/firestore';
 import { db } from './config';
 
@@ -12,23 +12,33 @@ export const COLLECTIONS = {
 };
 
 // Seed initial workforce collections to user's real Firestore database
-export async function seedFirestoreWithData(employees, projects, leaves, tasks = []) {
+export async function seedFirestoreWithData(employees = [], projects = [], leaves = [], tasks = []) {
   try {
+    const promises = [];
     for (const emp of employees) {
-      await setDoc(doc(db, COLLECTIONS.EMPLOYEES, emp.id), emp, { merge: true });
+      if (emp?.id) {
+        promises.push(setDoc(doc(db, COLLECTIONS.EMPLOYEES, emp.id), emp, { merge: true }));
+      }
     }
     for (const proj of projects) {
-      await setDoc(doc(db, COLLECTIONS.PROJECTS, proj.id), proj, { merge: true });
+      if (proj?.id) {
+        promises.push(setDoc(doc(db, COLLECTIONS.PROJECTS, proj.id), proj, { merge: true }));
+      }
     }
     for (const leave of leaves) {
-      await setDoc(doc(db, COLLECTIONS.LEAVES, leave.id), leave, { merge: true });
+      if (leave?.id) {
+        promises.push(setDoc(doc(db, COLLECTIONS.LEAVES, leave.id), leave, { merge: true }));
+      }
     }
     for (const task of tasks) {
-      await setDoc(doc(db, COLLECTIONS.TASKS, task.id), task, { merge: true });
+      if (task?.id) {
+        promises.push(setDoc(doc(db, COLLECTIONS.TASKS, task.id), task, { merge: true }));
+      }
     }
+    await Promise.all(promises);
     return { success: true, message: 'All documents successfully pushed to Firestore!' };
   } catch (err) {
-    console.warn('Firestore seed notice (rules may require test mode):', err.message);
+    console.warn('Firestore seed notice:', err.message);
     return { success: false, error: err.message };
   }
 }
@@ -37,11 +47,11 @@ export async function seedFirestoreWithData(employees, projects, leaves, tasks =
 export function subscribeToFirestoreEmployees(onUpdate) {
   try {
     return onSnapshot(collection(db, COLLECTIONS.EMPLOYEES), (snapshot) => {
-      if (!snapshot.empty) {
-        const emps = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
-        onUpdate(emps);
-      }
-    }, () => {});
+      const emps = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+      onUpdate(emps);
+    }, (err) => {
+      console.warn('Firestore employees subscription warning:', err);
+    });
   } catch {
     return () => {};
   }
@@ -51,11 +61,42 @@ export function subscribeToFirestoreEmployees(onUpdate) {
 export function subscribeToFirestoreProjects(onUpdate) {
   try {
     return onSnapshot(collection(db, COLLECTIONS.PROJECTS), (snapshot) => {
-      if (!snapshot.empty) {
-        const projs = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
-        onUpdate(projs);
-      }
-    }, () => {});
+      const projs = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+      onUpdate(projs);
+    }, (err) => {
+      console.warn('Firestore projects subscription warning:', err);
+    });
+  } catch {
+    return () => {};
+  }
+}
+
+// Realtime listener for leaves
+export function subscribeToFirestoreLeaves(onUpdate) {
+  try {
+    return onSnapshot(collection(db, COLLECTIONS.LEAVES), (snapshot) => {
+      const leaves = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+      onUpdate(leaves);
+    }, (err) => {
+      console.warn('Firestore leaves subscription warning:', err);
+    });
+  } catch {
+    return () => {};
+  }
+}
+
+// Realtime listener for tasks
+export function subscribeToFirestoreTasks(employeeId, onUpdate) {
+  try {
+    const q = employeeId 
+      ? query(collection(db, COLLECTIONS.TASKS), where('employeeId', '==', employeeId))
+      : collection(db, COLLECTIONS.TASKS);
+    return onSnapshot(q, (snapshot) => {
+      const tasks = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+      onUpdate(tasks);
+    }, (err) => {
+      console.warn('Firestore tasks subscription warning:', err);
+    });
   } catch {
     return () => {};
   }
@@ -65,9 +106,10 @@ export function subscribeToFirestoreProjects(onUpdate) {
 export async function getFirestoreEmployees() {
   try {
     const snap = await getDocs(collection(db, COLLECTIONS.EMPLOYEES));
-    if (snap.empty) return null;
+    if (snap.empty) return [];
     return snap.docs.map(d => ({ id: d.id, ...d.data() }));
   } catch (err) {
+    console.warn('getFirestoreEmployees warning:', err);
     return null;
   }
 }
@@ -76,9 +118,10 @@ export async function getFirestoreEmployees() {
 export async function getFirestoreProjects() {
   try {
     const snap = await getDocs(collection(db, COLLECTIONS.PROJECTS));
-    if (snap.empty) return null;
+    if (snap.empty) return [];
     return snap.docs.map(d => ({ id: d.id, ...d.data() }));
   } catch (err) {
+    console.warn('getFirestoreProjects warning:', err);
     return null;
   }
 }
@@ -87,56 +130,105 @@ export async function getFirestoreProjects() {
 export async function getFirestoreLeaves() {
   try {
     const snap = await getDocs(collection(db, COLLECTIONS.LEAVES));
-    if (snap.empty) return null;
+    if (snap.empty) return [];
     return snap.docs.map(d => ({ id: d.id, ...d.data() }));
   } catch (err) {
+    console.warn('getFirestoreLeaves warning:', err);
     return null;
   }
 }
 
 // Fetch all tasks from Firestore
-export async function getFirestoreTasks() {
+export async function getFirestoreTasks(employeeId) {
   try {
-    const snap = await getDocs(collection(db, COLLECTIONS.TASKS));
-    if (snap.empty) return null;
+    const q = employeeId 
+      ? query(collection(db, COLLECTIONS.TASKS), where('employeeId', '==', employeeId))
+      : collection(db, COLLECTIONS.TASKS);
+    const snap = await getDocs(q);
+    if (snap.empty) return [];
     return snap.docs.map(d => ({ id: d.id, ...d.data() }));
   } catch (err) {
+    console.warn('getFirestoreTasks warning:', err);
     return null;
   }
 }
 
 // Sync single employee to Firestore
 export async function syncEmployeeToFirestore(employee) {
+  if (!employee?.id) return;
   try {
     await setDoc(doc(db, COLLECTIONS.EMPLOYEES, employee.id), employee, { merge: true });
   } catch (err) {
-    // silent catch if rules locked
+    console.warn('syncEmployeeToFirestore warning:', err);
+  }
+}
+
+// Delete single employee from Firestore
+export async function deleteEmployeeFromFirestore(employeeId) {
+  if (!employeeId) return;
+  try {
+    await deleteDoc(doc(db, COLLECTIONS.EMPLOYEES, employeeId));
+  } catch (err) {
+    console.warn('deleteEmployeeFromFirestore warning:', err);
   }
 }
 
 // Sync single leave to Firestore
 export async function syncLeaveToFirestore(leave) {
+  if (!leave?.id) return;
   try {
     await setDoc(doc(db, COLLECTIONS.LEAVES, leave.id), leave, { merge: true });
   } catch (err) {
-    // silent catch if rules locked
+    console.warn('syncLeaveToFirestore warning:', err);
+  }
+}
+
+// Delete single leave from Firestore
+export async function deleteLeaveFromFirestore(leaveId) {
+  if (!leaveId) return;
+  try {
+    await deleteDoc(doc(db, COLLECTIONS.LEAVES, leaveId));
+  } catch (err) {
+    console.warn('deleteLeaveFromFirestore warning:', err);
   }
 }
 
 // Sync single project to Firestore
 export async function syncProjectToFirestore(project) {
+  if (!project?.id) return;
   try {
     await setDoc(doc(db, COLLECTIONS.PROJECTS, project.id), project, { merge: true });
   } catch (err) {
-    // silent catch if rules locked
+    console.warn('syncProjectToFirestore warning:', err);
+  }
+}
+
+// Delete single project from Firestore
+export async function deleteProjectFromFirestore(projectId) {
+  if (!projectId) return;
+  try {
+    await deleteDoc(doc(db, COLLECTIONS.PROJECTS, projectId));
+  } catch (err) {
+    console.warn('deleteProjectFromFirestore warning:', err);
   }
 }
 
 // Sync single task to Firestore
 export async function syncTaskToFirestore(task) {
+  if (!task?.id) return;
   try {
     await setDoc(doc(db, COLLECTIONS.TASKS, task.id), task, { merge: true });
   } catch (err) {
-    // silent catch if rules locked
+    console.warn('syncTaskToFirestore warning:', err);
+  }
+}
+
+// Delete single task from Firestore
+export async function deleteTaskFromFirestore(taskId) {
+  if (!taskId) return;
+  try {
+    await deleteDoc(doc(db, COLLECTIONS.TASKS, taskId));
+  } catch (err) {
+    console.warn('deleteTaskFromFirestore warning:', err);
   }
 }
