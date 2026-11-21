@@ -371,31 +371,50 @@ export default function App() {
       id: `PROJ-${Math.floor(200 + Math.random() * 800)}`,
       status: 'In Progress',
       startDate: new Date().toISOString().split('T')[0],
-      allocatedMembers: [],
+      allocatedMembers: Array.isArray(newProj.allocatedMembers) ? newProj.allocatedMembers : [],
       ...newProj,
       requiredSkills: Array.isArray(newProj.requiredSkills)
         ? newProj.requiredSkills
-        : (newProj.requiredSkills ? newProj.requiredSkills.split(',').map((s) => s.trim()) : []),
+        : (newProj.requiredSkills ? newProj.requiredSkills.split(',').map((s) => s.trim()) : ['React', 'Node.js']),
     };
 
     const updatedProjects = [createdProj, ...projects];
     setProjects(updatedProjects);
     localStorage.setItem('pulsehr_projects', JSON.stringify(updatedProjects));
-    setStats(computeStats(employees, updatedProjects, leaves));
-    showToast(`Project ${createdProj.name} created!`);
 
-    // Notify any employees allocated to this new project
-    if (Array.isArray(createdProj.allocatedMembers) && createdProj.allocatedMembers.length > 0) {
-      createdProj.allocatedMembers.forEach((memId) => {
+    // Update assigned employees state so they immediately reflect the new project on both dashboards!
+    const assignedIds = createdProj.allocatedMembers || [];
+    let updatedEmployees = [...employees];
+    if (assignedIds.length > 0) {
+      updatedEmployees = employees.map((emp) => {
+        if (assignedIds.includes(emp.id)) {
+          return {
+            ...emp,
+            assignedProjectId: createdProj.id,
+            assignedProjectName: createdProj.name,
+            allocationPercent: emp.allocationPercent > 0 ? emp.allocationPercent : 100,
+            allocationStatus: (emp.allocationPercent > 0 && emp.allocationPercent < 100) ? 'Partially Available' : 'Fully Booked',
+          };
+        }
+        return emp;
+      });
+      setEmployees(updatedEmployees);
+      localStorage.setItem('pulsehr_employees', JSON.stringify(updatedEmployees));
+
+      // Notify each assigned employee!
+      assignedIds.forEach((memId) => {
         addNotification({
           title: 'Assigned to New Project',
-          message: `HR has assigned you to new project: "${createdProj.name}" (${createdProj.client || 'Client Account'}).`,
+          message: `HR has assigned you to project "${createdProj.name}" (${createdProj.client || 'Client Account'}).`,
           type: 'project_assigned',
           targetRole: 'employee',
           targetEmployeeId: memId,
         });
       });
     }
+
+    setStats(computeStats(updatedEmployees, updatedProjects, leaves));
+    showToast(`Project "${createdProj.name}" created with ${assignedIds.length} team member(s)!`);
 
     syncProjectToFirestore(createdProj);
     try {
@@ -466,7 +485,74 @@ export default function App() {
     } catch {}
   };
 
-  // 7. EMPLOYEE COMPLETES TASK -> NOTIFY HR
+  // 7. HR GRANTS / RECORDS LEAVE DIRECTLY
+  const handleCreateLeave = async (leaveData) => {
+    const emp = employees.find((e) => e.id === leaveData.employeeId);
+    const createdLeave = {
+      id: `LEV-${Math.floor(400 + Math.random() * 600)}`,
+      employeeId: leaveData.employeeId,
+      employeeName: emp ? emp.name : 'Employee',
+      department: emp ? emp.department : 'Engineering',
+      leaveType: leaveData.leaveType || 'Paid Time Off',
+      startDate: leaveData.startDate,
+      endDate: leaveData.endDate,
+      daysCount: parseInt(leaveData.daysCount || 1, 10),
+      reason: leaveData.reason || 'Granted by HR',
+      status: leaveData.status || 'Approved',
+      appliedOn: new Date().toISOString().split('T')[0],
+    };
+
+    const updatedLeaves = [createdLeave, ...leaves];
+    setLeaves(updatedLeaves);
+    localStorage.setItem('pulsehr_leaves', JSON.stringify(updatedLeaves));
+
+    let updatedEmployees = [...employees];
+    if (createdLeave.status === 'Approved' && emp && emp.leaveBalance) {
+      const key = createdLeave.leaveType.toLowerCase().includes('sick')
+        ? 'sick'
+        : createdLeave.leaveType.toLowerCase().includes('casual')
+        ? 'casual'
+        : 'paid';
+      const currentBal = emp.leaveBalance[key] || 0;
+      updatedEmployees = employees.map((e) => {
+        if (e.id === emp.id) {
+          return {
+            ...e,
+            leaveBalance: {
+              ...e.leaveBalance,
+              [key]: Math.max(0, currentBal - createdLeave.daysCount),
+            },
+          };
+        }
+        return e;
+      });
+      setEmployees(updatedEmployees);
+      localStorage.setItem('pulsehr_employees', JSON.stringify(updatedEmployees));
+    }
+
+    setStats(computeStats(updatedEmployees, projects, updatedLeaves));
+    showToast(`Leave recorded for ${createdLeave.employeeName} (${createdLeave.status})!`);
+
+    addNotification({
+      title: createdLeave.status === 'Approved' ? 'Leave Granted by HR' : 'Leave Request Logged',
+      message: `HR has recorded a ${createdLeave.leaveType} (${createdLeave.daysCount} days: ${createdLeave.startDate} to ${createdLeave.endDate}) with status: ${createdLeave.status}.`,
+      type: createdLeave.status === 'Approved' ? 'leave_approved' : 'leave_applied',
+      targetRole: 'employee',
+      targetEmployeeId: createdLeave.employeeId,
+    });
+
+    syncLeaveToFirestore(createdLeave);
+
+    try {
+      await fetch('/api/leaves', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(createdLeave),
+      });
+    } catch {}
+  };
+
+  // 8. EMPLOYEE COMPLETES TASK -> NOTIFY HR
   const handleTaskCompleted = (task, employeeName) => {
     addNotification({
       title: 'Task Completed',
@@ -477,12 +563,15 @@ export default function App() {
     showToast(`Task "${task.title}" marked Completed! HR has been notified.`);
   };
 
-  // 8. EMPLOYEE APPLIES FOR LEAVE -> NOTIFY HR
-  const handleLeaveApplied = (leaveData, employeeName) => {
+  // 9. EMPLOYEE APPLIES FOR LEAVE -> NOTIFY HR & UPDATE BOTH DASHBOARDS
+  const handleLeaveApplied = (leaveData, employeeId, employeeName) => {
+    const empId = employeeId || currentUser?.employee?.id;
+    const emp = employees.find((e) => e.id === empId);
     const newLeaveEntry = {
-      id: `LV-${Math.floor(100 + Math.random() * 900)}`,
-      employeeId: currentUser?.employee?.id,
-      employeeName: employeeName,
+      id: `LEV-${Math.floor(400 + Math.random() * 600)}`,
+      employeeId: empId,
+      employeeName: employeeName || emp?.name || 'Employee',
+      department: emp?.department || 'Engineering',
       ...leaveData,
       status: 'Pending',
       appliedOn: new Date().toISOString().split('T')[0],
@@ -495,7 +584,7 @@ export default function App() {
 
     addNotification({
       title: 'New Leave Request Filed',
-      message: `${employeeName} applied for ${leaveData.leaveType} (${leaveData.daysCount} days: ${leaveData.startDate} to ${leaveData.endDate}).`,
+      message: `${emp?.name || employeeName} applied for ${leaveData.leaveType} (${leaveData.daysCount} days: ${leaveData.startDate} to ${leaveData.endDate}).`,
       type: 'leave_applied',
       targetRole: 'hr',
     });
@@ -504,8 +593,25 @@ export default function App() {
     showToast('Leave request submitted! HR has been notified.');
   };
 
-  // Background Cloud Sync
+  // Background Cloud Sync & Multi-Tab Realtime Storage Listener
   useEffect(() => {
+    // Cross-tab real-time event listener
+    const handleStorageChange = (e) => {
+      if (e.key === 'pulsehr_leaves' && e.newValue) {
+        try { setLeaves(JSON.parse(e.newValue)); } catch {}
+      }
+      if (e.key === 'pulsehr_projects' && e.newValue) {
+        try { setProjects(JSON.parse(e.newValue)); } catch {}
+      }
+      if (e.key === 'pulsehr_employees' && e.newValue) {
+        try { setEmployees(JSON.parse(e.newValue)); } catch {}
+      }
+      if (e.key === 'cooperate_notifications' && e.newValue) {
+        try { setNotifications(JSON.parse(e.newValue)); } catch {}
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+
     const syncCloudData = async () => {
       try {
         const [cloudEmps, cloudProjs, cloudLeaves] = await Promise.all([
@@ -531,6 +637,8 @@ export default function App() {
       }
     };
     syncCloudData();
+
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
   // Filter employees for search query
@@ -626,13 +734,17 @@ export default function App() {
                   projects={projects}
                   employees={employees}
                   onCreateProject={handleCreateProject}
+                  onAllocate={handleAllocateEmployee}
+                  onDeallocate={handleDeallocateEmployee}
                 />
               )}
 
               {activeHRTab === 'leaves' && (
                 <LeaveManager
                   leaves={leaves}
+                  employees={employees}
                   onUpdateLeaveStatus={handleUpdateLeaveStatus}
+                  onCreateLeave={handleCreateLeave}
                 />
               )}
             </div>
@@ -641,6 +753,7 @@ export default function App() {
             <EmployeePortal
               employee={selectedEmployee || currentUser.employee}
               leaves={leaves}
+              projects={projects}
               activeSubTab={employeeTab}
               onSubTabChange={setEmployeeTab}
               notifications={notifications}

@@ -9,7 +9,8 @@ import { SEED_TASKS } from '../data/seedData';
 
 export default function EmployeePortal({
   employee,
-  leaves,
+  leaves = [],
+  projects = [],
   onLeaveSubmitted,
   activeSubTab: controlledSubTab,
   onSubTabChange,
@@ -206,7 +207,7 @@ export default function EmployeePortal({
     const leaveSubmission = { ...newLeave };
 
     if (onLeaveApplied) {
-      onLeaveApplied(leaveSubmission, employee.name);
+      onLeaveApplied(leaveSubmission, employee.id, employee.name);
     }
 
     try {
@@ -257,6 +258,10 @@ export default function EmployeePortal({
     }
     return true;
   });
+
+  const assignedProject = projects.find(
+    (p) => p.id === employee.assignedProjectId || p.name === employee.assignedProjectName
+  );
 
   return (
     <div className="space-y-6 animate-in fade-in">
@@ -437,6 +442,18 @@ export default function EmployeePortal({
         </button>
 
         <button
+          onClick={() => setActiveSubTab('project')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap ${
+            activeSubTab === 'project'
+              ? 'bg-[#452473] text-white shadow-xs'
+              : 'text-slate-600 hover:bg-white hover:text-slate-900'
+          }`}
+        >
+          <Briefcase className="w-4 h-4" />
+          <span>My Project & Squad</span>
+        </button>
+
+        <button
           onClick={() => setActiveSubTab('holidays')}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap ${
             activeSubTab === 'holidays'
@@ -596,6 +613,125 @@ export default function EmployeePortal({
                   </div>
                 );
               })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* SUB-TAB: MY PROJECT & SQUAD DETAILS                       */}
+      {/* ======================================================== */}
+      {activeSubTab === 'project' && (
+        <div className="space-y-6">
+          {assignedProject ? (
+            <div className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200/80 shadow-xs space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+                <div>
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <span className="px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-900 text-[10px] font-mono font-bold">
+                      {assignedProject.id}
+                    </span>
+                    <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-mono font-bold">
+                      {assignedProject.priority} Priority
+                    </span>
+                    <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-mono font-bold">
+                      {assignedProject.status}
+                    </span>
+                  </div>
+                  <h2 className="text-2xl font-black text-slate-900">{assignedProject.name}</h2>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Client Organization: <strong className="text-slate-800 font-bold">{assignedProject.client}</strong>
+                  </p>
+                </div>
+
+                <div className="p-3.5 rounded-2xl bg-purple-50/50 border border-purple-100 text-right">
+                  <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Your Assigned Capacity</span>
+                  <span className="text-lg font-black text-[#ff5c8a]">{employee.allocationPercent}% (Staffed)</span>
+                </div>
+              </div>
+
+              {/* 3 Metric Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="p-4 rounded-2xl bg-[#f8f9fc] border border-slate-200">
+                  <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Project / Tech Lead</span>
+                  <span className="text-sm font-bold text-slate-800 mt-1 block">{assignedProject.lead || 'Senior Architect'}</span>
+                </div>
+                <div className="p-4 rounded-2xl bg-[#f8f9fc] border border-slate-200">
+                  <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Target Sign-off Deadline</span>
+                  <span className="text-sm font-bold text-slate-800 mt-1 block font-mono">{assignedProject.deadline}</span>
+                </div>
+                <div className="p-4 rounded-2xl bg-[#f8f9fc] border border-slate-200">
+                  <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">Account Budget</span>
+                  <span className="text-sm font-bold text-emerald-700 mt-1 block font-mono">{assignedProject.budget || '₹45,00,000'}</span>
+                </div>
+              </div>
+
+              {/* Required Skills & Technology Stack */}
+              <div>
+                <h4 className="text-[11px] uppercase font-bold tracking-wider text-slate-400 mb-2">
+                  Required Technology Stack & Competencies
+                </h4>
+                <div className="flex flex-wrap gap-2">
+                  {(Array.isArray(assignedProject.requiredSkills)
+                    ? assignedProject.requiredSkills
+                    : ['React', 'Node.js', 'PostgreSQL', 'Cloud Infrastructure']
+                  ).map((sk, idx) => (
+                    <span
+                      key={idx}
+                      className="px-3 py-1 rounded-xl bg-purple-50 text-purple-800 text-xs font-semibold border border-purple-100"
+                    >
+                      {sk}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Staffed Squad Members */}
+              <div className="pt-4 border-t border-slate-100">
+                <h4 className="text-[11px] uppercase font-bold tracking-wider text-slate-400 mb-3">
+                  Engineering Squad Teammates ({assignedProject.allocatedMembers?.length || 1} Staffed)
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                  {(assignedProject.allocatedMembers && assignedProject.allocatedMembers.length > 0
+                    ? assignedProject.allocatedMembers
+                    : [employee.id]
+                  ).map((memId) => {
+                    const isMe = memId === employee.id;
+                    return (
+                      <div
+                        key={memId}
+                        className={`p-3 rounded-2xl border text-xs flex items-center gap-3 transition ${
+                          isMe
+                            ? 'bg-purple-50/70 border-purple-200 ring-2 ring-purple-200/50'
+                            : 'bg-white border-slate-200'
+                        }`}
+                      >
+                        <div className="w-8 h-8 rounded-xl bg-[#452473] text-white font-bold flex items-center justify-center text-xs shadow-xs">
+                          {isMe ? employee.name[0] : 'T'}
+                        </div>
+                        <div className="truncate">
+                          <span className="font-bold text-slate-900 block truncate">
+                            {isMe ? `${employee.name} (You)` : memId}
+                          </span>
+                          <span className="text-[10px] text-slate-400 font-mono">
+                            {isMe ? employee.role : 'Allocated Teammate'}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="p-12 text-center bg-white rounded-3xl border border-slate-200/80 shadow-xs space-y-3">
+              <div className="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mx-auto font-bold shadow-xs">
+                <Briefcase className="w-7 h-7" />
+              </div>
+              <h3 className="text-lg font-bold text-slate-800">Currently on Bench (Available for New Project)</h3>
+              <p className="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
+                You are currently not staffed on an active client project. When HR allocates you to a project in the Resource Staffing matrix, all project milestones, client deliverables, and engineering squad teammates will immediately display here.
+              </p>
             </div>
           )}
         </div>

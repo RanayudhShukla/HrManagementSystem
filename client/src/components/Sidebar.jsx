@@ -28,6 +28,7 @@ export default function Sidebar({
 
   const employeeMenuItems = [
     { id: 'tasks', label: 'Assigned Tasks & Work', icon: CheckSquare },
+    { id: 'project', label: 'My Project & Squad', icon: Briefcase },
     { id: 'holidays', label: 'Corporate Holidays 2026', icon: Calendar, badge: '17' },
     { id: 'leaves', label: 'Leave Requests', icon: CalendarCheck },
     { id: 'payroll', label: 'CTC & Compensation', icon: Banknote },
