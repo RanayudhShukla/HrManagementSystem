@@ -115,6 +115,10 @@ export default function App() {
         const parsed = JSON.parse(session);
         if (parsed?.role === 'employee' && isLegacyDemoEmployee(parsed.employee)) {
           sessionStorage.removeItem('pulsehr_auth');
+        } else if (parsed?.role === 'hr') {
+          const updated = { ...parsed, name: 'Ranayudh' };
+          sessionStorage.setItem('pulsehr_auth', JSON.stringify(updated));
+          return updated;
         } else {
           return parsed;
         }
@@ -125,6 +129,10 @@ export default function App() {
         if (parsed?.role === 'employee' && isLegacyDemoEmployee(parsed.employee)) {
           localStorage.removeItem('pulsehr_auth');
           return null;
+        } else if (parsed?.role === 'hr') {
+          const updated = { ...parsed, name: 'Ranayudh' };
+          localStorage.setItem('pulsehr_auth', JSON.stringify(updated));
+          return updated;
         }
         return parsed;
       }

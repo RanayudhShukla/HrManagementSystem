@@ -148,7 +148,7 @@ export default function LoginPage({ onLogin, employees = [] }) {
       ) {
         onLogin({
           role: 'hr',
-          name: 'Dylan Hunter',
+          name: 'Ranayudh',
           email: cleanInput,
           title: 'HR Operations Lead',
         });

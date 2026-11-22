@@ -222,10 +222,10 @@ export default function Header({
           <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full text-white font-bold flex items-center justify-center text-xs shadow-sm shrink-0 ${
             isHR ? 'bg-gradient-to-tr from-[#ff5c8a] to-[#452473]' : 'bg-gradient-to-tr from-cyan-500 to-blue-600'
           }`}>
-            {currentUser?.name ? currentUser.name.split(' ').map((n) => n[0]).join('') : 'DH'}
+            {currentUser?.name ? currentUser.name.split(' ').map((n) => n[0]).join('') : 'R'}
           </div>
           <div className="hidden sm:block text-left">
-            <p className="text-xs font-bold text-slate-800 leading-tight">{currentUser?.name || 'Dylan Hunter'}</p>
+            <p className="text-xs font-bold text-slate-800 leading-tight">{currentUser?.name || 'Ranayudh'}</p>
             <p className="text-[10px] text-purple-700 font-bold">{isHR ? 'HR Admin' : 'Employee'}</p>
           </div>
 

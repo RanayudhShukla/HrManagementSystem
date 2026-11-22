@@ -150,10 +150,10 @@ export default function Sidebar({
             <div className={`w-8 h-8 rounded-full text-white font-bold flex items-center justify-center text-xs shadow-xs shrink-0 ${
               isHR ? 'bg-gradient-to-tr from-pink-500 to-purple-400' : 'bg-gradient-to-tr from-cyan-500 to-blue-600'
             }`}>
-              {currentUser?.name ? currentUser.name.split(' ').map((n) => n[0]).join('') : 'DH'}
+              {currentUser?.name ? currentUser.name.split(' ').map((n) => n[0]).join('') : 'R'}
             </div>
             <div className="truncate max-w-[130px]">
-              <p className="text-xs font-bold text-white truncate">{currentUser?.name || 'Dylan Hunter'}</p>
+              <p className="text-xs font-bold text-white truncate">{currentUser?.name || 'Ranayudh'}</p>
               <p className="text-[10px] text-purple-200/70 truncate">{currentUser?.title || (isHR ? 'HR Admin' : 'Employee')}</p>
             </div>
           </div>
