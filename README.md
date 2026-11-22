@@ -8,7 +8,7 @@
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 > **Enterprise HR Resource Management System (HRMS) & Workforce Allocation Suite**  
-> Designed for modern IT consultancies, software engineering firms, and digital enterprises. Features a complete Role-Based Access Control (RBAC) architecture separating **Executive HR Administration** from **Employee Self-Service (ESS)** with native enterprise localization (₹ currency, corporate compliance, and the 2026 Official Gazetted Corporate Holidays Calendar).
+> Designed for modern IT consultancies, software engineering firms, and digital enterprises. Features a complete Role-Based Access Control (RBAC) architecture separating **Executive HR Administration** from **Employee Self-Service (ESS)** with native enterprise localization (corporate compliance, and the 2026 Official Gazetted Corporate Holidays Calendar).
 
 ---
 
