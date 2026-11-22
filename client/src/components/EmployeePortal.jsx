@@ -1010,7 +1010,7 @@ export default function EmployeePortal({
       {/* ======================================================== */}
       {showAddTaskModal && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-white border border-slate-200 rounded-3xl p-6 shadow-2xl animate-in fade-in zoom-in-95">
+          <div className="w-full max-w-md bg-white border border-slate-200 rounded-3xl p-6 shadow-2xl animate-in fade-in zoom-in-95 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <h3 className="text-base font-bold text-slate-800">Add Sprint Deliverable / Task</h3>
               <button onClick={() => setShowAddTaskModal(false)} className="text-slate-400 hover:text-slate-700">
@@ -1118,7 +1118,7 @@ export default function EmployeePortal({
       {/* ======================================================== */}
       {showApplyModal && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-white border border-slate-200 rounded-3xl p-6 shadow-2xl animate-in fade-in zoom-in-95">
+          <div className="w-full max-w-md bg-white border border-slate-200 rounded-3xl p-6 shadow-2xl animate-in fade-in zoom-in-95 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <h3 className="text-base font-bold text-slate-800">Apply for Time-Off / Leave</h3>
               <button onClick={() => setShowApplyModal(false)} className="text-slate-400 hover:text-slate-700">

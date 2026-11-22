@@ -185,7 +185,7 @@ export default function WorkforceDirectory({
           />
         </div>
 
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 w-full sm:w-auto">
           <span className="text-xs text-slate-400 font-semibold flex items-center gap-1 shrink-0">
             <Filter className="w-3.5 h-3.5" /> Department:
           </span>
@@ -336,7 +336,7 @@ export default function WorkforceDirectory({
       {/* MODAL: ONBOARD NEW EMPLOYEE & PROVISION CREDENTIALS */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="w-full max-w-xl bg-white border border-slate-200 rounded-3xl p-6 shadow-2xl animate-in fade-in zoom-in-95 max-h-[92vh] overflow-y-auto">
+          <div className="w-full max-w-xl bg-white border border-slate-200 rounded-3xl p-4 sm:p-6 shadow-2xl animate-in fade-in zoom-in-95 max-h-[92vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-2">
                 <div className="w-9 h-9 rounded-xl bg-purple-100 text-[#452473] flex items-center justify-center">

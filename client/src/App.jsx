@@ -136,6 +136,7 @@ export default function App() {
 
   const [activeHRTab, setActiveHRTab] = useState('dashboard'); // 'dashboard' | 'resources' | 'directory' | 'projects' | 'leaves'
   const [employeeTab, setEmployeeTab] = useState('tasks'); // 'tasks' | 'holidays' | 'leaves' | 'payroll'
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
   // Authoritative State with instant localStorage persistence (Clean Corporate Slate)
   const [employees, setEmployees] = useState(() => {
@@ -1070,6 +1071,8 @@ export default function App() {
         pendingLeavesCount={stats?.pendingLeavesCount || 0}
         currentUser={currentUser}
         onLogout={handleLogout}
+        isOpen={mobileMenuOpen}
+        onClose={() => setMobileMenuOpen(false)}
       />
 
       {/* Right Content Area */}
@@ -1087,10 +1090,11 @@ export default function App() {
           employees={employees}
           onOpenFirebaseModal={() => setShowFirebaseModal(true)}
           firestoreConnected={firestoreConnected}
+          onToggleMobileMenu={() => setMobileMenuOpen(!mobileMenuOpen)}
         />
 
         {/* Main Content */}
-        <main className="flex-1 p-6 sm:p-8 max-w-7xl w-full mx-auto space-y-6">
+        <main className="flex-1 p-3 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-6 min-w-0">
           {/* VIEW 1: HR EXECUTIVE SUITE (Only rendered if HR Admin is logged in) */}
           {isHR ? (
             <div>

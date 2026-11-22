@@ -233,7 +233,7 @@ export default function LoginPage({ onLogin, employees = [] }) {
     <div className="min-h-screen bg-[#f4f5fa] flex items-center justify-center p-4 selection:bg-[#ff5c8a] selection:text-white">
       <div className="w-full max-w-4xl bg-white rounded-3xl shadow-2xl border border-slate-200/80 overflow-hidden grid grid-cols-1 md:grid-cols-2">
         {/* LEFT BRAND PANEL (Deep Purple #452473) */}
-        <div className="bg-[#452473] text-white p-8 sm:p-12 flex flex-col justify-between relative overflow-hidden">
+        <div className="bg-[#452473] text-white p-6 sm:p-12 flex flex-col justify-between relative overflow-hidden">
           {/* Decorative Background Glows */}
           <div className="absolute -top-10 -left-10 w-44 h-44 rounded-full bg-white/5 blur-2xl pointer-events-none" />
           <div className="absolute -bottom-10 -right-10 w-48 h-48 rounded-full bg-[#ff5c8a]/15 blur-3xl pointer-events-none" />
@@ -241,11 +241,11 @@ export default function LoginPage({ onLogin, employees = [] }) {
           {/* Top Logo */}
           <div className="relative z-10">
             <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-2xl bg-white text-[#452473] flex items-center justify-center shadow-md font-bold">
-                <Building2 className="w-6 h-6 stroke-[2.5]" />
+              <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-white text-[#452473] flex items-center justify-center shadow-md font-bold shrink-0">
+                <Building2 className="w-5 h-5 sm:w-6 sm:h-6 stroke-[2.5]" />
               </div>
               <div>
-                <h1 className="text-xl font-bold tracking-tight text-white flex items-center gap-1.5">
+                <h1 className="text-lg sm:text-xl font-bold tracking-tight text-white flex items-center gap-1.5">
                   <span>Co-Operate</span>
                   <span className="text-[#ff5c8a]">HRMS</span>
                 </h1>
@@ -255,18 +255,18 @@ export default function LoginPage({ onLogin, employees = [] }) {
               </div>
             </div>
 
-            <div className="mt-8 space-y-2">
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-white leading-tight">
+            <div className="mt-4 sm:mt-8 space-y-1.5 sm:space-y-2">
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-white leading-tight">
                 Workforce Capacity & Resource Intelligence
               </h2>
-              <p className="text-xs text-purple-200/80 leading-relaxed">
+              <p className="text-xs text-purple-200/80 leading-relaxed hidden sm:block">
                 Secure enterprise sign-in for corporate HR executives and internal staff members.
               </p>
             </div>
           </div>
 
-          {/* Bottom Highlights */}
-          <div className="mt-8 pt-6 border-t border-white/10 space-y-2.5 text-xs text-purple-100/90 relative z-10">
+          {/* Bottom Highlights (Desktop only to prevent clutter on mobile) */}
+          <div className="mt-8 pt-6 border-t border-white/10 space-y-2.5 text-xs text-purple-100/90 relative z-10 hidden md:block">
             <div className="flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 text-[#ff5c8a] shrink-0" />
               <span>Real-Time Resource Allocation & Staffing Matrix</span>
@@ -283,7 +283,7 @@ export default function LoginPage({ onLogin, employees = [] }) {
         </div>
 
         {/* RIGHT LOGIN FORM PANEL */}
-        <div className="p-8 sm:p-12 flex flex-col justify-between bg-white">
+        <div className="p-6 sm:p-12 flex flex-col justify-between bg-white">
           <div>
             {/* Role Toggle Selector */}
             <div className="flex items-center justify-between pb-4 mb-6 border-b border-slate-100">

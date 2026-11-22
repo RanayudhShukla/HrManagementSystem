@@ -65,7 +65,7 @@ export default function DashboardOverview({ stats, onNavigateToTab, notification
             </svg>
 
             {/* Months labels */}
-            <div className="flex justify-between text-[11px] font-medium text-slate-400 mt-2">
+            <div className="flex justify-between text-[10px] sm:text-[11px] font-medium text-slate-400 mt-2 overflow-x-auto gap-2">
               <span>01 Jan</span>
               <span>31 Jan</span>
               <span>22 Feb</span>

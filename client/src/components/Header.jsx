@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { 
   Search, Bell, Settings, LogOut, CheckCircle2, 
-  Briefcase, CalendarCheck, AlertCircle, Check, Trash2, X, Cloud, Database 
+  Briefcase, CalendarCheck, AlertCircle, Check, Trash2, X, Cloud, Database, Menu 
 } from 'lucide-react';
 
 export default function Header({
@@ -16,6 +16,7 @@ export default function Header({
   employees = [],
   onOpenFirebaseModal,
   firestoreConnected = false,
+  onToggleMobileMenu,
 }) {
   const isHR = currentUser?.role === 'hr';
   const employeeId = currentUser?.employee?.id;
@@ -61,35 +62,48 @@ export default function Header({
   };
 
   return (
-    <header className="h-20 bg-white border-b border-slate-200/80 px-6 sm:px-8 flex items-center justify-between sticky top-0 z-40 shadow-xs select-none">
-      {/* Search Input Bar */}
-      <div className="flex-1 max-w-md">
-        <div className="relative">
-          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
-          <input
-            type="text"
-            placeholder={isHR ? "Search staff, skills (React, AWS), or projects..." : "Search company directory..."}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-[#f4f5fa] border-none text-xs text-slate-700 rounded-xl pl-10 pr-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#452473]/20 placeholder:text-slate-400"
-          />
+    <header className="h-16 sm:h-20 bg-white border-b border-slate-200/80 px-4 sm:px-8 flex items-center justify-between sticky top-0 z-40 shadow-xs select-none">
+      {/* Left: Mobile Menu Toggle & Search Bar */}
+      <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0 mr-2 sm:mr-4">
+        {/* Mobile Hamburger Menu Toggle */}
+        <button
+          onClick={onToggleMobileMenu}
+          className="p-2 -ml-1 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 md:hidden transition shrink-0 active:scale-95"
+          title="Open Navigation Menu"
+          aria-label="Open Navigation Menu"
+        >
+          <Menu className="w-5 h-5" />
+        </button>
+
+        {/* Search Input Bar */}
+        <div className="flex-1 max-w-xs sm:max-w-md min-w-0">
+          <div className="relative">
+            <Search className="w-4 h-4 absolute left-3 sm:left-3.5 top-1/2 -translate-y-1/2 text-slate-400 shrink-0" />
+            <input
+              type="text"
+              placeholder={isHR ? "Search staff, skills, or projects..." : "Search company directory..."}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-[#f4f5fa] border-none text-xs text-slate-700 rounded-xl pl-9 sm:pl-10 pr-3 sm:pr-4 py-2 sm:py-2.5 focus:outline-none focus:ring-2 focus:ring-[#452473]/20 placeholder:text-slate-400 truncate"
+            />
+          </div>
         </div>
       </div>
 
       {/* Right Controls */}
-      <div className="flex items-center gap-3 sm:gap-4">
+      <div className="flex items-center gap-2 sm:gap-4 shrink-0">
         {/* Real-time Google Cloud Firestore Live Badge & Modal Trigger */}
         <button
           onClick={onOpenFirebaseModal}
-          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-amber-50/80 hover:bg-amber-100/90 border border-amber-200/80 text-amber-900 text-xs font-semibold transition active:scale-95 shadow-xs"
+          className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-xl bg-amber-50/80 hover:bg-amber-100/90 border border-amber-200/80 text-amber-900 text-xs font-semibold transition active:scale-95 shadow-xs shrink-0"
           title="Google Cloud Firestore (hrsystem-b0734) - Click to inspect live database"
         >
-          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
           <Cloud className="w-3.5 h-3.5 text-amber-600 shrink-0" />
           <span className="hidden sm:inline font-mono text-[11px] font-bold">Firestore Sync</span>
         </button>
 
-        {/* Team Avatars Group */}
+        {/* Team Avatars Group (Desktop only) */}
         <div className="hidden lg:flex items-center -space-x-2">
           {employees.slice(0, 4).map((emp, i) => (
             <div
@@ -126,7 +140,7 @@ export default function Header({
 
           {/* Floating Dropdown Drawer */}
           {showNotifMenu && (
-            <div className="absolute right-0 mt-3 w-80 sm:w-96 bg-white border border-slate-200 rounded-2xl shadow-2xl p-4 animate-in fade-in zoom-in-95 z-50">
+            <div className="absolute right-0 mt-3 w-72 sm:w-96 max-w-[calc(100vw-2rem)] bg-white border border-slate-200 rounded-2xl shadow-2xl p-4 animate-in fade-in zoom-in-95 z-50">
               {/* Dropdown Header */}
               <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                 <div className="flex items-center gap-2">
@@ -204,8 +218,8 @@ export default function Header({
         </div>
 
         {/* User Profile Info & Sign Out */}
-        <div className="flex items-center gap-3 pl-3 border-l border-slate-200">
-          <div className={`w-9 h-9 rounded-full text-white font-bold flex items-center justify-center text-xs shadow-sm ${
+        <div className="flex items-center gap-2 sm:gap-3 pl-2 sm:pl-3 border-l border-slate-200">
+          <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full text-white font-bold flex items-center justify-center text-xs shadow-sm shrink-0 ${
             isHR ? 'bg-gradient-to-tr from-[#ff5c8a] to-[#452473]' : 'bg-gradient-to-tr from-cyan-500 to-blue-600'
           }`}>
             {currentUser?.name ? currentUser.name.split(' ').map((n) => n[0]).join('') : 'DH'}
@@ -217,7 +231,7 @@ export default function Header({
 
           <button
             onClick={onLogout}
-            className="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition ml-1"
+            className="p-1.5 sm:p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition"
             title="Sign Out"
           >
             <LogOut className="w-4 h-4" />
