@@ -436,8 +436,8 @@ export default function EmployeePortal({
 
       {/* RECENT HR UPDATES & PROJECT ALERTS */}
       {(() => {
-        const myAlerts = notifications.filter(
-          (n) => n.targetRole === 'all' || n.targetEmployeeId === employee?.id
+        const myAlerts = (Array.isArray(notifications) ? notifications : []).filter(
+          (n) => n && (n.targetRole === 'all' || n.targetEmployeeId === employee?.id)
         );
         if (myAlerts.length === 0) return null;
         return (
@@ -453,7 +453,7 @@ export default function EmployeePortal({
                 </div>
               </div>
               <span className="px-2.5 py-0.5 rounded-full bg-purple-50 text-[#452473] font-mono text-[10px] font-bold">
-                {myAlerts.filter((n) => !n.read).length} Unread
+                {myAlerts.filter((n) => n && !n.read).length} Unread
               </span>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 pt-3">
@@ -746,14 +746,16 @@ export default function EmployeePortal({
                   Engineering Squad Teammates ({assignedProject.allocatedMembers?.length || 1} Staffed)
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                  {(assignedProject.allocatedMembers && assignedProject.allocatedMembers.length > 0
+                  {(Array.isArray(assignedProject.allocatedMembers) && assignedProject.allocatedMembers.length > 0
                     ? assignedProject.allocatedMembers
-                    : [employee.id]
-                  ).map((memId) => {
-                    const isMe = memId === employee.id;
+                    : [employee?.id || 'EMP-1001']
+                  ).map((mem, memIdx) => {
+                    const memId = typeof mem === 'object' && mem ? (mem.id || mem.name) : mem;
+                    const memName = typeof mem === 'object' && mem ? (mem.name || mem.id) : mem;
+                    const isMe = memId === employee?.id || memName === employee?.name;
                     return (
                       <div
-                        key={memId}
+                        key={memId || memIdx}
                         className={`p-3 rounded-2xl border text-xs flex items-center gap-3 transition ${
                           isMe
                             ? 'bg-purple-50/70 border-purple-200 ring-2 ring-purple-200/50'
@@ -761,11 +763,11 @@ export default function EmployeePortal({
                         }`}
                       >
                         <div className="w-8 h-8 rounded-xl bg-[#452473] text-white font-bold flex items-center justify-center text-xs shadow-xs">
-                          {isMe ? (employee?.name ? employee.name[0].toUpperCase() : 'U') : 'T'}
+                          {isMe ? (employee?.name ? employee.name[0].toUpperCase() : 'U') : (memName ? String(memName)[0].toUpperCase() : 'T')}
                         </div>
                         <div className="truncate">
                           <span className="font-bold text-slate-900 block truncate">
-                            {isMe ? `${employee?.name || 'You'} (You)` : memId}
+                            {isMe ? `${employee?.name || 'You'} (You)` : (memName || memId)}
                           </span>
                           <span className="text-[10px] text-slate-400 font-mono">
                             {isMe ? (employee?.role || 'Staff Member') : 'Allocated Teammate'}

@@ -21,12 +21,21 @@ class ErrorBoundary extends React.Component {
     try {
       sessionStorage.clear();
       localStorage.removeItem('pulsehr_auth');
+      localStorage.removeItem('pulsehr_leaves');
+      localStorage.removeItem('pulsehr_projects');
+      localStorage.removeItem('cooperate_notifications');
+      for (let i = localStorage.length - 1; i >= 0; i--) {
+        const k = localStorage.key(i);
+        if (k && (k.startsWith('pulsehr_tasks_') || k.startsWith('pulsehr_') || k.startsWith('cooperate_'))) {
+          localStorage.removeItem(k);
+        }
+      }
       const saved = localStorage.getItem('pulsehr_employees');
       if (saved) {
         const parsed = JSON.parse(saved);
         const legacyNames = ['aarav sharma', 'elena rostova', 'marcus vance', 'kavita verma', 'david chen', 'sarah miller', 'vikram malhotra', 'vikram batra'];
         const cleaned = (Array.isArray(parsed) ? parsed : [])
-          .filter((e) => e && !legacyNames.includes((e.name || '').trim().toLowerCase()) && !(e.email || '').toLowerCase().includes('@pulsehr.com'))
+          .filter((e) => e && typeof e === 'object' && e.name && !legacyNames.includes((e.name || '').trim().toLowerCase()) && !(e.email || '').toLowerCase().includes('@pulsehr.com'))
           .map((e) => ({
             ...e,
             skills: Array.isArray(e.skills)
@@ -37,6 +46,14 @@ class ErrorBoundary extends React.Component {
           }));
         localStorage.setItem('pulsehr_employees', JSON.stringify(cleaned));
       }
+    } catch {}
+    window.location.reload();
+  };
+
+  handleHardReset = () => {
+    try {
+      sessionStorage.clear();
+      localStorage.clear();
     } catch {}
     window.location.reload();
   };
@@ -53,12 +70,20 @@ class ErrorBoundary extends React.Component {
             <p className="text-xs text-slate-500 leading-relaxed">
               Co-Operate HRMS encountered an unexpected client state transition. Click below to safely reset active session cache and restore your dashboard.
             </p>
-            <button
-              onClick={this.handleReset}
-              className="w-full py-3 rounded-xl bg-[#452473] hover:bg-[#381a60] text-white font-bold text-xs shadow-md transition active:scale-95"
-            >
-              Reset Session & Reload Application
-            </button>
+            <div className="space-y-2 pt-2">
+              <button
+                onClick={this.handleReset}
+                className="w-full py-3 rounded-xl bg-[#452473] hover:bg-[#381a60] text-white font-bold text-xs shadow-md transition active:scale-95"
+              >
+                Reset Session & Reload Application
+              </button>
+              <button
+                onClick={this.handleHardReset}
+                className="w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs transition active:scale-95"
+              >
+                Clear All Local Cache & Reload
+              </button>
+            </div>
           </div>
         </div>
       );

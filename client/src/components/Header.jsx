@@ -36,7 +36,8 @@ export default function Header({
   }, []);
 
   // Filter notifications relevant to current session role
-  const relevantNotifications = notifications.filter((n) => {
+  const relevantNotifications = (Array.isArray(notifications) ? notifications : []).filter((n) => {
+    if (!n || typeof n !== 'object') return false;
     if (isHR) {
       return n.targetRole === 'hr' || n.targetRole === 'all';
     } else {
@@ -44,7 +45,7 @@ export default function Header({
     }
   });
 
-  const unreadCount = relevantNotifications.filter((n) => !n.read).length;
+  const unreadCount = relevantNotifications.filter((n) => n && !n.read).length;
 
   const getNotifIcon = (type) => {
     switch (type) {
@@ -222,7 +223,7 @@ export default function Header({
           <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full text-white font-bold flex items-center justify-center text-xs shadow-sm shrink-0 ${
             isHR ? 'bg-gradient-to-tr from-[#ff5c8a] to-[#452473]' : 'bg-gradient-to-tr from-cyan-500 to-blue-600'
           }`}>
-            {currentUser?.name ? currentUser.name.split(' ').map((n) => n[0]).join('') : 'R'}
+            {((currentUser?.name || (isHR ? 'Ranayudh' : 'Employee')).split(' ').filter(Boolean).map((n) => n[0]).join('') || 'R').slice(0, 3)}
           </div>
           <div className="hidden sm:block text-left">
             <p className="text-xs font-bold text-slate-800 leading-tight">{currentUser?.name || 'Ranayudh'}</p>

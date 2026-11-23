@@ -22,8 +22,8 @@ export default function LeaveManager({
     status: 'Approved',
   });
 
-  const filteredLeaves = leaves.filter((l) =>
-    filter === 'All' ? true : l.status.toLowerCase() === filter.toLowerCase()
+  const filteredLeaves = (Array.isArray(leaves) ? leaves : []).filter((l) =>
+    l && (filter === 'All' ? true : (l.status || '').toLowerCase() === filter.toLowerCase())
   );
 
   const handleUpdateStatus = async (id, status) => {
@@ -249,9 +249,9 @@ export default function LeaveManager({
                   onChange={(e) => setNewLeave({ ...newLeave, employeeId: e.target.value })}
                   className="w-full bg-[#f8f9fc] border border-slate-200 rounded-xl px-3 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#452473]/20 font-medium"
                 >
-                  {employees.map((emp) => (
+                  {(Array.isArray(employees) ? employees : []).filter(Boolean).map((emp) => (
                     <option key={emp.id} value={emp.id}>
-                      {emp.name} ({emp.id} • {emp.department} • {emp.role})
+                      {emp.name || emp.id} ({emp.id} • {emp.department || 'General'} • {emp.role || 'Member'})
                     </option>
                   ))}
                 </select>

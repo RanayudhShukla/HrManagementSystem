@@ -130,7 +130,8 @@ export default function WorkforceDirectory({
     setTimeout(() => setCopiedId(null), 2500);
   };
 
-  const filteredEmployees = employees.filter((emp) => {
+  const filteredEmployees = (Array.isArray(employees) ? employees : []).filter((emp) => {
+    if (!emp || typeof emp !== 'object') return false;
     const matchesDept = departmentFilter === 'All' || emp.department === departmentFilter;
     const q = search.toLowerCase().trim();
     const empSkills = Array.isArray(emp?.skills)
@@ -230,11 +231,11 @@ export default function WorkforceDirectory({
                     <td className="py-3.5 px-4">
                       <div className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#ff5c8a] to-[#452473] text-white font-bold flex items-center justify-center text-xs shrink-0 shadow-xs">
-                          {emp.name.split(' ').map((n) => n[0]).join('')}
+                          {((emp.name || emp.id || 'E').split(' ').filter(Boolean).map((n) => n[0]).join('') || 'E').slice(0, 3)}
                         </div>
                         <div>
                           <p className="font-bold text-slate-900 text-sm flex items-center gap-1.5">
-                            <span>{emp.name}</span>
+                            <span>{emp.name || emp.id || 'Unnamed Employee'}</span>
                             <span className="w-2 h-2 rounded-full bg-emerald-500" title="Active Account" />
                           </p>
                           <p className="text-[10px] text-slate-400 font-mono mt-0.5">{emp.phone || '+91 98765 43210'}</p>

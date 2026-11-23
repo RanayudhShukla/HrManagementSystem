@@ -7,7 +7,9 @@ import {
 export default function DashboardOverview({ stats, onNavigateToTab, notifications = [], employees = [] }) {
   if (!stats) return null;
 
-  const hrNotifications = notifications.filter((n) => n.targetRole === 'hr' || n.targetRole === 'all');
+  const hrNotifications = (Array.isArray(notifications) ? notifications : []).filter(
+    (n) => n && (n.targetRole === 'hr' || n.targetRole === 'all')
+  );
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -260,14 +262,14 @@ export default function DashboardOverview({ stats, onNavigateToTab, notification
           <h3 className="text-sm font-bold text-slate-800">Upcoming Resource Reviews</h3>
 
           <div className="space-y-3">
-            {(employees && employees.length > 0 ? employees.slice(0, 4) : []).map((person, idx) => (
-              <div key={idx} className="flex items-center justify-between text-xs py-1.5 border-b border-slate-100 last:border-none">
+            {(Array.isArray(employees) && employees.length > 0 ? employees.filter(Boolean).slice(0, 4) : []).map((person, idx) => (
+              <div key={person.id || idx} className="flex items-center justify-between text-xs py-1.5 border-b border-slate-100 last:border-none">
                 <div className="flex items-center gap-2.5">
                   <div className={`w-8 h-8 rounded-full ${['bg-amber-400', 'bg-[#ff5c8a]', 'bg-[#72c2ff]', 'bg-[#452473]'][idx % 4]} text-white font-bold flex items-center justify-center text-[10px]`}>
-                    {person.name ? person.name[0] : 'E'}
+                    {person.name ? person.name[0] : (person.id ? person.id[0] : 'E')}
                   </div>
                   <div>
-                    <p className="font-bold text-slate-800">{person.name}</p>
+                    <p className="font-bold text-slate-800">{person.name || person.id || 'Staff Member'}</p>
                     <p className="text-[10px] text-slate-400">{person.role || person.department || 'Active Team Member'}</p>
                   </div>
                 </div>

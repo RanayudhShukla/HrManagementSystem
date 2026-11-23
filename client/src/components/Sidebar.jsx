@@ -150,7 +150,7 @@ export default function Sidebar({
             <div className={`w-8 h-8 rounded-full text-white font-bold flex items-center justify-center text-xs shadow-xs shrink-0 ${
               isHR ? 'bg-gradient-to-tr from-pink-500 to-purple-400' : 'bg-gradient-to-tr from-cyan-500 to-blue-600'
             }`}>
-              {currentUser?.name ? currentUser.name.split(' ').map((n) => n[0]).join('') : 'R'}
+              {((currentUser?.name || (isHR ? 'Ranayudh' : 'Employee')).split(' ').filter(Boolean).map((n) => n[0]).join('') || 'R').slice(0, 3)}
             </div>
             <div className="truncate max-w-[130px]">
               <p className="text-xs font-bold text-white truncate">{currentUser?.name || 'Ranayudh'}</p>
